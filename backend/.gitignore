@@ -1,0 +1,13 @@
+# Large files
+*.exe
+*.msi
+*.zip
+*.rar
+
+# Node modules and environment
+node_modules
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
