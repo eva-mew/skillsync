@@ -12,19 +12,26 @@ const Login = () => {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      const res = await API.post('/auth/login', formData);
-      login(res.data, res.data.token);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+  try {
+    const res = await API.post('/auth/login', formData);
+    login(res.data, res.data.token);
+
+    // ← CHANGE THIS: redirect by role
+    if (res.data.role === 'admin') {
+      navigate('/admin');
+    } else {
       navigate('/jobs');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
     }
-    setLoading(false);
-  };
+
+  } catch (err) {
+    setError(err.response?.data?.message || 'Login failed');
+  }
+  setLoading(false);
+};
 
   return (
     <div style={{ minHeight:'100vh', background:'var(--bg-secondary)', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }}>

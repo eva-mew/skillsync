@@ -32,15 +32,46 @@ const AdminPanel = () => {
   });
 
  const [applications, setApplications] = useState([]);
+const downloadApplicationsCSV = () => {
+  if (applications.length === 0) { alert('No applications to download!'); return; }
+  const headers = ['Applicant Name','Email','Job Title','Company','Experience','Skills','Status','Applied Date'];
+  const rows = applications.map(app => [
+    app.applicantName || '', app.applicantEmail || '', app.jobTitle || '',
+    app.company || '', app.experience || '', (app.skills || []).join(' | '),
+    app.status || '', app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : ''
+  ]);
+  const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = `Applications_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(link); link.click();
+  document.body.removeChild(link); URL.revokeObjectURL(url);
+};
 
-  useEffect(() => {
-    // Redirect if not admin
-    if (user && user.role !== 'admin') {
-      navigate('/dashboard');
-    }
-    fetchData();
-  }, []);
-
+const downloadUsersCSV = () => {
+  if (users.length === 0) { alert('No users to download!'); return; }
+  const headers = ['Name','Email','Role','Skills','Experience','Work Preference','Premium','Profile %','Joined'];
+  const rows = users.map(u => [
+    u.name || '', u.email || '', u.role || '', (u.skills || []).join(' | '),
+    u.experience || '', u.workPreference || '', u.isPremium ? 'Yes' : 'No',
+    u.profileComplete || 0, u.createdAt ? new Date(u.createdAt).toLocaleDateString() : ''
+  ]);
+  const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = `Users_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(link); link.click();
+  document.body.removeChild(link); URL.revokeObjectURL(url);
+};
+ // eslint-disable-next-line
+useEffect(() => {
+  if (user && user.role !== 'admin') {
+    navigate('/dashboard');
+  }
+  fetchData();
+}, []);
   const fetchData = async () => {
     try {
       const [jobsRes, startupsRes, usersRes, statsRes,appRes] = await Promise.all([
@@ -248,6 +279,32 @@ const AdminPanel = () => {
                   <label style={labelStyle}>Required Skills (comma separated) *</label>
                   <input style={inputStyle} placeholder="React, Node.js, MongoDB" required value={jobForm.requiredSkills} onChange={e => setJobForm({ ...jobForm, requiredSkills: e.target.value })} />
                 </div>
+                <div style={{ gridColumn: '1/-1' }}>
+                  <label style={labelStyle}>Premium Job?</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <input
+                      type="checkbox"
+                      checked={jobForm.isPremium || false}
+                      onChange={e => setJobForm({ ...jobForm, isPremium: e.target.checked })}
+                      style={{ width: '18px', height: '18px', accentColor: 'var(--accent)' }}
+                    />
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      👑 Mark as Premium — only visible to premium subscribers
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Company Website</label>
+                  <input style={inputStyle} placeholder="https://company.com" value={jobForm.companyWebsite || ''} onChange={e => setJobForm({ ...jobForm, companyWebsite: e.target.value })} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Company Size</label>
+                  <input style={inputStyle} placeholder="50-200 employees" value={jobForm.companySize || ''} onChange={e => setJobForm({ ...jobForm, companySize: e.target.value })} />
+                </div>
+                <div style={{ gridColumn: '1/-1' }}>
+                  <label style={labelStyle}>Company Description</label>
+                  <textarea style={{ ...inputStyle, minHeight: '80px' }} placeholder="Brief company overview..." value={jobForm.companyDescription || ''} onChange={e => setJobForm({ ...jobForm, companyDescription: e.target.value })} />
+                </div>
               </div>
               <div>
                 <label style={labelStyle}>Description *</label>
@@ -422,52 +479,99 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* USERS TABLE */}
-        {activeTab === 'users' && (
-          <div className="card" style={{ overflow: 'hidden' }}>
-            <div className="table-wrap">
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-                  {['Name', 'Email', 'Role', 'Skills', 'Profile %', 'Joined'].map(h => (
-                    <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u, i) => (
-                  <tr key={u._id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
-                    <td style={{ padding: '12px 16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700' }}>
-                          {u.name?.charAt(0).toUpperCase()}
-                        </div>
-                        <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>{u.name}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>{u.email}</td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <span className={`badge ${u.role === 'admin' ? 'badge-orange' : 'badge-blue'}`}>{u.role}</span>
-                    </td>
-                    <td style={{ padding: '12px 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>{u.skills?.length || 0} skills</td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ flex: 1, height: '6px', background: 'var(--bg-tertiary)', borderRadius: '3px', overflow: 'hidden', minWidth: '60px' }}>
-                          <div style={{ height: '100%', background: u.profileComplete >= 80 ? 'var(--green)' : 'var(--accent)', borderRadius: '3px', width: `${u.profileComplete || 0}%` }} />
-                        </div>
-                        <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>{u.profileComplete || 0}%</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                      {new Date(u.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
-          </div>
-        )}
+       {activeTab === 'users' && (
+  <div className="card" style={{ overflow: 'hidden' }}>
+    <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>
+        👥 All Registered Users
+      </h3>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <span className="badge badge-blue">{users.length} total</span>
+        <button onClick={downloadUsersCSV} className="btn-secondary" style={{ fontSize: '13px', padding: '7px 16px' }}>
+          📥 Download CSV
+        </button>
+      </div>
+    </div>
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+            {['#', 'Name', 'Email', 'Role', 'Skills', 'Experience', 'Work Pref', 'Premium', 'Profile %', 'Joined'].map(h => (
+              <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {users.length === 0 ? (
+            <tr>
+              <td colSpan="10" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No users found
+              </td>
+            </tr>
+          ) : (
+            users.map((u, i) => (
+              <tr key={u._id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-muted)' }}>{i + 1}</td>
+                <td style={{ padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'var(--accent)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700', flexShrink: 0 }}>
+                      {u.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{u.name}</span>
+                  </div>
+                </td>
+                <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-secondary)' }}>{u.email}</td>
+                <td style={{ padding: '12px 14px' }}>
+                  <span className={`badge ${u.role === 'admin' ? 'badge-orange' : 'badge-blue'}`}>{u.role}</span>
+                </td>
+                <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                  {u.skills?.length > 0 ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', maxWidth: '160px' }}>
+                      {u.skills.slice(0, 2).map((s, j) => (
+                        <span key={j} className="skill-tag" style={{ fontSize: '10px', padding: '2px 6px' }}>{s}</span>
+                      ))}
+                      {u.skills.length > 2 && (
+                        <span className="badge badge-gray">+{u.skills.length - 2}</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>No skills</span>
+                  )}
+                </td>
+                <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
+                  {u.experience || '—'}
+                </td>
+                <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
+                  {u.workPreference || '—'}
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  {u.isPremium ? (
+                    <span style={{ padding: '3px 8px', borderRadius: '100px', background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: 'white', fontSize: '11px', fontWeight: '700' }}>
+                      👑 Premium
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Free</span>
+                  )}
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ flex: 1, height: '6px', background: 'var(--bg-tertiary)', borderRadius: '3px', overflow: 'hidden', minWidth: '50px' }}>
+                      <div style={{ height: '100%', background: u.profileComplete >= 80 ? 'var(--green)' : 'var(--accent)', borderRadius: '3px', width: `${u.profileComplete || 0}%` }} />
+                    </div>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{u.profileComplete || 0}%</span>
+                  </div>
+                </td>
+                <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                  {new Date(u.createdAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
         {/* APPLICATIONS TABLE */}
 {activeTab === 'applications' && (
   <div className="card" style={{ overflow:'hidden' }}>
@@ -475,7 +579,12 @@ const AdminPanel = () => {
       <h3 style={{ fontSize:'16px', fontWeight:'700', color:'var(--text-primary)' }}>
         📋 All Job Applications
       </h3>
-      <span className="badge badge-blue">{applications.length} total</span>
+     <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
+  <span className="badge badge-blue">{applications.length} total</span>
+  <button onClick={downloadApplicationsCSV} className="btn-secondary" style={{ fontSize:'13px', padding:'7px 16px' }}>
+    📥 Download CSV
+  </button>
+</div>
     </div>
     <div style={{ overflowX:'auto' }}>
       <table style={{ width:'100%', borderCollapse:'collapse' }}>

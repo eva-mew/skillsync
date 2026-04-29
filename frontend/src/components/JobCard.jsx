@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import API from '../api';
-
+import { useNavigate } from 'react-router-dom';
 // Company logo color map
 const logoColors = {
   'A': '#2563eb', 'B': '#16a34a', 'C': '#dc2626', 'D': '#9333ea',
@@ -25,6 +25,7 @@ const getMatchLabel = (score) => {
 };
 
 const JobCard = ({ job, onSave, saved = false, onCompare, isInCompare = false }) => {
+  const navigate = useNavigate();
   const [isSaved, setIsSaved] = useState(saved);
   const [saving, setSaving] = useState(false);
   const [applied, setApplied] = useState(false);
@@ -80,13 +81,13 @@ const JobCard = ({ job, onSave, saved = false, onCompare, isInCompare = false })
 
         {/* Company Logo + Info */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-          <div className="company-logo" style={{ background: `${logoColor}15`, color: logoColor, border: `1.5px solid ${logoColor}30`, fontSize: '18px', fontWeight: '800' }}>
-            {firstLetter}
-          </div>
+          <div className="company-logo" onClick={() => navigate(`/jobs/${job._id}`)} style={{ background: `${logoColor}15`, color: logoColor, border: `1.5px solid ${logoColor}30`, fontSize: '18px', fontWeight: '800', cursor: 'pointer' }}>
+  {firstLetter}
+</div>
           <div>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 2px 0', lineHeight: '1.3' }}>
-              {job.title}
-            </h3>
+           <h3 onClick={() => navigate(`/jobs/${job._id}`)} style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 2px 0', lineHeight: '1.3', cursor: 'pointer' }}>
+  {job.title}
+</h3>
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500' }}>
               {job.company}
             </div>
@@ -99,6 +100,17 @@ const JobCard = ({ job, onSave, saved = false, onCompare, isInCompare = false })
             {getMatchLabel(job.matchScore)} · {job.matchScore}%
           </div>
         )}
+        {/* Premium Badge */}
+{job.isPremium && (
+  <span style={{
+    padding: '4px 10px', borderRadius: '100px',
+    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+    color: 'white', fontSize: '11px', fontWeight: '700',
+    marginLeft: '6px'
+  }}>
+    👑 Premium
+  </span>
+)}
       </div>
 
       {/* META INFO */}
@@ -188,19 +200,32 @@ const JobCard = ({ job, onSave, saved = false, onCompare, isInCompare = false })
         <span className="badge badge-gray" style={{ fontSize: '11px' }}>
           {job.experience}
         </span>
-
-        {/* Apply Button */}
-        <button
-          onClick={handleApply}
-          className="btn-primary"
-          style={{
-            background: applied ? 'var(--green)' : 'var(--accent)',
-            padding: '8px 18px',
-            fontSize: '13px'
-          }}
-        >
-          {applied ? '✅ Applied!' : 'Apply Now →'}
-        </button>
+{/* Apply Button */}
+{job.locked ? (
+  <button
+    onClick={() => navigate(`/jobs/${job._id}`)}
+    style={{
+      padding: '8px 18px', borderRadius: '8px', border: 'none',
+      background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+      color: 'white', fontSize: '13px', fontWeight: '600',
+      cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif',
+      display: 'flex', alignItems: 'center', gap: '4px'
+    }}
+  >
+    👑 View & Upgrade
+  </button>
+) : (
+  <button
+    onClick={handleApply}
+    className="btn-primary"
+    style={{
+      background: applied ? 'var(--green)' : 'var(--accent)',
+      padding: '8px 18px', fontSize: '13px'
+    }}
+  >
+    {applied ? '✅ Applied!' : 'Apply Now →'}
+  </button>
+)}
       </div>
     </div>
   );

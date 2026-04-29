@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import API from '../api';
-
+import { useAuth } from '../context/AuthContext'; // ← add this import at top
 const skillOptions = ['React', 'Node.js', 'MongoDB', 'JavaScript', 'Python', 'SQL', 'UI/UX Design', 'Digital Marketing', 'Content Writing', 'Data Analysis', 'Flutter', 'DevOps', 'PHP', 'Laravel', 'TypeScript', 'AWS'];
 const interestOptions = ['Education', 'Healthcare', 'Tech / SaaS', 'E-commerce', 'Finance', 'Social Impact', 'Gaming', 'Food & Lifestyle', 'Real Estate', 'Health & Fitness'];
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -36,20 +37,23 @@ const Onboarding = () => {
     }));
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      await API.put('/profile', {
-        ...form,
-        interests: form.interests.map(i => i.toLowerCase().replace(' / ', '-').replace(' & ', '-').replace(' ', '-'))
-      });
-      navigate('/jobs');
-    } catch (err) {
-      console.error(err);
-    }
-    setLoading(false);
-  };
+ const handleSubmit = async () => {
+  setLoading(true);
+  try {
+    await API.put('/profile', form);
 
+    // redirect by role
+    if (user.role === 'admin') {
+      navigate('/admin');
+    } else {
+      navigate('/jobs');
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
+  setLoading(false);
+};
   const progress = (step / 3) * 100;
 
   return (

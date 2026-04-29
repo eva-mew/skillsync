@@ -56,39 +56,52 @@ const getStartupMatchScore = (user, startup) => {
   return Math.round(score);
 };
 
-// @route  GET /api/recommend/jobs
-// @access Private
 const getRecommendedJobs = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
     if (!user.skills || user.skills.length === 0) {
-      return res.status(400).json({
-        message: 'Please complete your profile first to get recommendations'
-      });
+      return res.status(400).json({ message: 'Please complete your profile first' });
     }
 
+    // Get ALL jobs including premium
     const jobs = await Job.find({});
 
-    // Score all jobs
-    const scoredJobs = jobs.map(job => ({
-      ...job._doc,
-      matchScore: getJobMatchScore(user, job),
-      matchedSkills: job.requiredSkills.filter(skill =>
-        user.skills.map(s => s.toLowerCase())
-        .includes(skill.toLowerCase()))
-    }));
+    const scored = jobs.map(job => {
+      const jobObj = job.toObject();
+      const required = job.requiredSkills || [];
+      const matched = required.filter(s => user.skills.includes(s));
 
-    // Sort by score — highest first
-    const sorted = scoredJobs
-      .sort((a, b) => b.matchScore - a.matchScore);
+      const skillScore = required.length > 0 ? (matched.length / required.length) * 70 : 0;
+      const modeScore = user.workPreference === job.workMode ? 20 : 0;
+      const expScore = user.experience === job.experience ? 10 : 0;
+      const matchScore = Math.round(skillScore + modeScore + expScore);
 
+      // Premium jobs visible to ALL but marked as locked for non-premium
+      if (job.isPremium && !user.isPremium) {
+        return {
+          ...jobObj,
+          matchScore,
+          matchedSkills: matched,
+          locked: true  // frontend uses this to show upgrade button
+        };
+      }
+
+      return {
+        ...jobObj,
+        matchScore,
+        matchedSkills: matched,
+        locked: false
+      };
+    });
+
+    const sorted = scored.sort((a, b) => b.matchScore - a.matchScore);
     res.json(sorted);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
-
 // @route  GET /api/recommend/startups
 // @access Private
 const getRecommendedStartups = async (req, res) => {

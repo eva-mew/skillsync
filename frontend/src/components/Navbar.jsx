@@ -27,12 +27,17 @@ const Navbar = () => {
     { label: 'Explore Jobs', path: '/jobs' },
   ];
 
-  const userLinks = [
-    { label: 'Jobs', path: '/jobs' },
-    { label: 'Startups', path: '/startups' },
-    { label: 'Dashboard', path: '/dashboard' },
-    ...(user?.role === 'admin' ? [{ label: 'Admin', path: '/admin' }] : []),
-  ];
+const userLinks = user?.role === 'admin'
+  ? [
+      // Admin ONLY sees Admin Panel in navbar
+      { label: '🛡️ Admin Panel', path: '/admin' },
+    ]
+  : [
+      // Regular user sees these
+      { label: 'Jobs', path: '/jobs' },
+      { label: 'Startups', path: '/startups' },
+      { label: 'Dashboard', path: '/dashboard' },
+    ];
 
   const navLinks = user ? userLinks : publicLinks;
 
@@ -147,6 +152,7 @@ const Navbar = () => {
                           { icon: '📊', label: 'Dashboard', path: '/dashboard' },
                           { icon: '📋', label: 'My Applications', path: '/applications' },
                           { icon: '👤', label: 'My Profile', path: '/profile' },
+                          { icon: '👑', label: 'Go Premium', path: '/premium' },
                           ...(user.role === 'admin' ? [{ icon: '⚙️', label: 'Admin Panel', path: '/admin' }] : [])
                         ].map(item => (
                           <button key={item.label}
@@ -196,9 +202,20 @@ const Navbar = () => {
                   {mobileMenuOpen ? '✕' : '☰'}
                 </button>
               </>
-            ) : (
+           ) : (
               <>
                 <button className="btn-ghost" onClick={() => navigate('/login')}>Sign In</button>
+                <button
+                  onClick={() => navigate('/premium')}
+                  style={{
+                    padding: '8px 14px', borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    color: 'white', border: 'none', fontWeight: '700',
+                    fontSize: '13px', cursor: 'pointer'
+                  }}
+                >
+                  👑 Premium
+                </button>
                 <button className="btn-primary" onClick={() => navigate('/register')}>Get Started →</button>
               </>
             )}

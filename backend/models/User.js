@@ -40,7 +40,10 @@ const UserSchema = new mongoose.Schema({
   profileComplete: {
     type: Number,
     default: 0
-  }
+  },
+  isPremium: { type: Boolean, default: false },
+premiumExpiresAt: { type: Date, default: null },
+premiumPlan: { type: String, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

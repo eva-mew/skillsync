@@ -34,7 +34,13 @@ const JobSchema = new mongoose.Schema({
   postedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }
+  },
+  isPremium: { type: Boolean, default: false },
+companyLogo: { type: String, default: '' },
+companyDescription: { type: String, default: '' },
+companyWebsite: { type: String, default: '' },
+companySize: { type: String, default: '' },
+companyLocation: { type: String, default: '' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Job', JobSchema);

@@ -12,9 +12,16 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ jobs: 0, startups: 0 });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+// eslint-disable-next-line
+useEffect(() => {
+  if (user?.role === 'admin') {
+    navigate('/admin');
+  }
+}, [user]);
+
+useEffect(() => {
+  fetchData();
+}, []);
 
   const fetchData = async () => {
     try {
