@@ -16,10 +16,10 @@ const JobDetail = () => {
   const [premiumStatus, setPremiumStatus] = useState(null);
   const [showPremiumPrompt, setShowPremiumPrompt] = useState(false);
 
- // eslint-disable-next-line react-hooks/exhaustive-deps
-useEffect(() => {
+ useEffect(() => {
   fetchJob();
   fetchPremiumStatus();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [id]);
 
   const fetchJob = async () => {

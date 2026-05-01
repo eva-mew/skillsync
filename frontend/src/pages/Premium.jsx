@@ -21,10 +21,10 @@ const Premium = () => {
   const status = searchParams.get('status');
   const txn = searchParams.get('txn');
 
-// eslint-disable-next-line react-hooks/exhaustive-deps
 useEffect(() => {
   fetchStatus();
   if (status === 'success' && txn) setTxnForInvoice(txn);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
   const fetchStatus = async () => {
