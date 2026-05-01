@@ -7,7 +7,8 @@ const {
   paymentCancel,
   getMyPayments,
   getPremiumStatus,
-  getInvoice
+  getInvoice,
+  paymentIPN
 } = require('../controllers/paymentController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -18,5 +19,7 @@ router.post('/cancel', paymentCancel);
 router.get('/my', protect, getMyPayments);
 router.get('/status', protect, getPremiumStatus);
 router.get('/invoice/:txn', protect, getInvoice);
+router.post('/ipn', paymentIPN);
+
 
 module.exports = router;

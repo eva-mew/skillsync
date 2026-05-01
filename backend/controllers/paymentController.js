@@ -170,6 +170,44 @@ const getInvoice = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+// @route POST /api/payment/ipn
+const paymentIPN = async (req, res) => {
+  try {
+    console.log("IPN data:", req.body);
+
+    const { tran_id, status } = req.body;
+    const payment = await Payment.findOne({ transactionId: tran_id });
+
+    if (!payment) {
+      return res.status(404).send("Payment not found");
+    }
+
+    if (status === "VALID") {
+      payment.status = "success";
+      payment.paidAt = new Date();
+      await payment.save();
+
+      // Activate premium for user
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+      await User.findByIdAndUpdate(payment.userId, {
+        isPremium: true,
+        premiumExpiresAt: expiresAt,
+        premiumPlan: "monthly"
+      });
+    } else {
+      payment.status = "failed";
+      await payment.save();
+    }
+
+    res.status(200).send("IPN processed");
+  } catch (err) {
+    console.error("IPN error:", err);
+    res.status(500).send("IPN failed");
+  }
+};
+
 
 module.exports = {
   initiatePayment,
@@ -178,5 +216,6 @@ module.exports = {
   paymentCancel,
   getMyPayments,
   getPremiumStatus,
-  getInvoice
+  getInvoice,
+  paymentIPN
 };
