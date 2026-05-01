@@ -7,7 +7,8 @@ import Navbar from '../components/Navbar';
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
+  // eslint-disable-next-line no-unused-vars
+const { theme, toggleTheme } = useTheme();
 
   return (
     <div style={{ minHeight:'100vh', background:'var(--bg-secondary)' }}>

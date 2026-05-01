@@ -12,7 +12,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ jobs: 0, startups: 0 });
   const [loading, setLoading] = useState(true);
 
-// eslint-disable-next-line
+// eslint-disable-next-line react-hooks/exhaustive-deps
 useEffect(() => {
   if (user?.role === 'admin') {
     navigate('/admin');

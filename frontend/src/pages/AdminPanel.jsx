@@ -65,7 +65,7 @@ const downloadUsersCSV = () => {
   document.body.appendChild(link); link.click();
   document.body.removeChild(link); URL.revokeObjectURL(url);
 };
- // eslint-disable-next-line
+// eslint-disable-next-line react-hooks/exhaustive-deps
 useEffect(() => {
   if (user && user.role !== 'admin') {
     navigate('/dashboard');

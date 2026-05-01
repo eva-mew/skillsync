@@ -5,22 +5,27 @@ import { useAuth } from '../context/AuthContext';
 import API from '../api';
 
 const Premium = () => {
+  // eslint-disable-next-line no-unused-vars
   const { user } = useAuth();
+  // eslint-disable-next-line no-unused-vars
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [premiumStatus, setPremiumStatus] = useState(null);
   const [payments, setPayments] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [txnForInvoice, setTxnForInvoice] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const invoiceRef = useRef();
 
   const status = searchParams.get('status');
   const txn = searchParams.get('txn');
 
-  useEffect(() => {
-    fetchStatus();
-    if (status === 'success' && txn) setTxnForInvoice(txn);
-  }, []);
+// eslint-disable-next-line react-hooks/exhaustive-deps
+useEffect(() => {
+  fetchStatus();
+  if (status === 'success' && txn) setTxnForInvoice(txn);
+}, []);
 
   const fetchStatus = async () => {
     try {

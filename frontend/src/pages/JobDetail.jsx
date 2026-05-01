@@ -7,6 +7,7 @@ import API from '../api';
 const JobDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+// eslint-disable-next-line no-unused-vars
   const { user } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,10 +16,11 @@ const JobDetail = () => {
   const [premiumStatus, setPremiumStatus] = useState(null);
   const [showPremiumPrompt, setShowPremiumPrompt] = useState(false);
 
-  useEffect(() => {
-    fetchJob();
-    fetchPremiumStatus();
-  }, [id]);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+useEffect(() => {
+  fetchJob();
+  fetchPremiumStatus();
+}, [id]);
 
   const fetchJob = async () => {
     try {
