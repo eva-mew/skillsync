@@ -20,7 +20,7 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:3002',
-    'https://skillsync.vercel.app',
+    'https://skillsync-one-rho.vercel.app',
     'https://skillsync-api-mci6.onrender.com'
   ],
   credentials: true
