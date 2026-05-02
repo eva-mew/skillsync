@@ -148,13 +148,17 @@ const userLinks = user?.role === 'admin'
                           </span>
                         </div>
 
-                        {[
-                          { icon: '📊', label: 'Dashboard', path: '/dashboard' },
-                          { icon: '📋', label: 'My Applications', path: '/applications' },
-                          { icon: '👤', label: 'My Profile', path: '/profile' },
-                          { icon: '👑', label: 'Go Premium', path: '/premium' },
-                          ...(user.role === 'admin' ? [{ icon: '⚙️', label: 'Admin Panel', path: '/admin' }] : [])
-                        ].map(item => (
+                        {(user.role === 'admin'
+  ? [
+      { icon: '🛡️', label: 'Admin Panel', path: '/admin' },
+    ]
+  : [
+      { icon: '📊', label: 'Dashboard', path: '/dashboard' },
+      { icon: '📋', label: 'My Applications', path: '/applications' },
+      { icon: '👤', label: 'My Profile', path: '/profile' },
+      { icon: '👑', label: 'Go Premium', path: '/premium' },
+    ]
+).map(item => (
                           <button key={item.label}
                             onClick={() => { navigate(item.path); setMenuOpen(false); }}
                             style={{

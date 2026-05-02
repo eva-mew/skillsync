@@ -203,7 +203,10 @@ const JobCard = ({ job, onSave, saved = false, onCompare, isInCompare = false })
 {/* Apply Button */}
 {job.locked ? (
   <button
-    onClick={() => navigate(`/jobs/${job._id}`)}
+    onClick={(e) => {
+      e.stopPropagation();
+      navigate(`/jobs/${job._id}`);
+    }}
     style={{
       padding: '8px 18px', borderRadius: '8px', border: 'none',
       background: 'linear-gradient(135deg, #f59e0b, #d97706)',
@@ -212,18 +215,23 @@ const JobCard = ({ job, onSave, saved = false, onCompare, isInCompare = false })
       display: 'flex', alignItems: 'center', gap: '4px'
     }}
   >
-    👑 View & Upgrade
+    👑 View Details
+  </button>
+) : applied ? (
+  <button
+    className="btn-primary"
+    style={{ background: 'var(--green)', padding: '8px 18px', fontSize: '13px' }}
+    disabled
+  >
+    ✅ Applied!
   </button>
 ) : (
   <button
     onClick={handleApply}
     className="btn-primary"
-    style={{
-      background: applied ? 'var(--green)' : 'var(--accent)',
-      padding: '8px 18px', fontSize: '13px'
-    }}
+    style={{ background: 'var(--accent)', padding: '8px 18px', fontSize: '13px' }}
   >
-    {applied ? '✅ Applied!' : 'Apply Now →'}
+    Apply Now →
   </button>
 )}
       </div>
