@@ -59,7 +59,13 @@ const JobCard = ({ job, onSave, saved = false, onCompare, isInCompare = false })
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleApply = async () => {
+const handleApply = async () => {
+  // Check if premium job — redirect to detail page
+  if (job.locked || job.isPremium) {
+    navigate(`/jobs/${job._id}`);
+    return;
+  }
+
   if (applied) return;
   try {
     await API.post('/applications', { jobId: job._id });
@@ -201,25 +207,20 @@ const JobCard = ({ job, onSave, saved = false, onCompare, isInCompare = false })
           {job.experience}
         </span>
 {/* Apply Button */}
-{job.locked ? (
+{job.locked || job.isPremium ? (
   <button
-    onClick={(e) => {
-      e.stopPropagation();
-      navigate(`/jobs/${job._id}`);
-    }}
+    onClick={() => navigate(`/jobs/${job._id}`)}
     style={{
       padding: '8px 18px', borderRadius: '8px', border: 'none',
       background: 'linear-gradient(135deg, #f59e0b, #d97706)',
       color: 'white', fontSize: '13px', fontWeight: '600',
-      cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif',
-      display: 'flex', alignItems: 'center', gap: '4px'
+      cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif'
     }}
   >
-    👑 View Details
+    👑 View & Upgrade
   </button>
 ) : applied ? (
-  <button
-    className="btn-primary"
+  <button className="btn-primary"
     style={{ background: 'var(--green)', padding: '8px 18px', fontSize: '13px' }}
     disabled
   >
