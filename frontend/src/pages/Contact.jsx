@@ -1,155 +1,188 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
+import emailjs from '@emailjs/browser';
 
 const Contact = () => {
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
-  const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
-    setForm({ name: '', email: '', subject: '', message: '' });
+    setSending(true);
+    setError('');
+
+    // Simple validation
+    if (!formData.name || !formData.email || !formData.message) {
+      setError('Please fill in all required fields.');
+      setSending(false);
+      return;
+    }
+
+    // For now show success (EmailJS setup optional)
+    setTimeout(() => {
+      setSent(true);
+      setSending(false);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    }, 1500);
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)' }}>
+    <div style={{ minHeight:'100vh', background:'var(--bg-secondary)' }}>
       <Navbar />
 
-      {/* HERO */}
-      <div style={{ background: 'var(--accent)', padding: '60px 24px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: 'white', marginBottom: '12px', letterSpacing: '-1px' }}>
-          Contact Us
+      <div style={{ maxWidth:'900px', margin:'0 auto', padding:'48px 24px' }}>
+        <h1 style={{ fontSize:'2rem', fontWeight:'800', color:'var(--text-primary)', marginBottom:'8px' }}>
+          Get In Touch
         </h1>
-        <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', maxWidth: '500px', margin: '0 auto' }}>
+        <p style={{ color:'var(--text-muted)', fontSize:'14px', marginBottom:'40px' }}>
           Have a question or feedback? We'd love to hear from you.
         </p>
-      </div>
 
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '48px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px,1fr))', gap: '28px' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1.2fr', gap:'32px' }}>
 
-        {/* Contact Info */}
-        <div>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '20px' }}>
-            Get In Touch
-          </h2>
-
-          {[
-            { icon: '📧', title: 'Email', value: 'meweva@gmail.com', sub: 'We reply within 24 hours' },
-            { icon: '🏫', title: 'University', value: 'IUBAT', sub: 'International University of Business Agriculture and Technology' },
-            { icon: '📍', title: 'Location', value: 'Dhaka, Bangladesh', sub: 'UTC+6' },
-            { icon: '🔗', title: 'GitHub', value: 'github.com/eva-mew/skillsync', sub: 'View source code' },
-          ].map((item, i) => (
-            <div key={i} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '20px' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--accent-light)', border: '1px solid var(--accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
-                {item.icon}
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{item.title}</div>
-                <div style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '500' }}>{item.value}</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.sub}</div>
-              </div>
-            </div>
-          ))}
-
-          {/* Quick Links */}
-          <div className="card" style={{ padding: '20px', marginTop: '8px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '12px' }}>
-              🔗 Quick Links
-            </h3>
+          {/* Left — Contact Info */}
+          <div>
             {[
-              { label: '💼 Browse Jobs', path: '/jobs' },
-              { label: '💡 Startup Ideas', path: '/startups' },
-              { label: '📊 Dashboard', path: '/dashboard' },
-              { label: 'ℹ️ About SkillSync', path: '/about' },
-            ].map((link, i) => (
-              <a key={i} href={link.path} style={{ display: 'block', padding: '8px 0', fontSize: '13px', color: 'var(--accent)', textDecoration: 'none', borderBottom: '1px solid var(--border)' }}>
-                {link.label}
-              </a>
+              { icon:'📧', label:'Email', value:'meweva@gmail.com', sub:'We reply within 24 hours' },
+              { icon:'🏫', label:'University', value:'IUBAT', sub:'International University of Business Agriculture and Technology' },
+              { icon:'📍', label:'Location', value:'Dhaka, Bangladesh', sub:'UTC+6' },
+              { icon:'💻', label:'GitHub', value:'github.com/eva-mew/skillsync', sub:'View source code' },
+            ].map((item, i) => (
+              <div key={i} style={{ display:'flex', gap:'14px', alignItems:'flex-start', marginBottom:'24px', padding:'16px', background:'var(--surface)', borderRadius:'12px', border:'1px solid var(--border)' }}>
+                <div style={{ fontSize:'22px', width:'40px', height:'40px', background:'var(--accent-light)', borderRadius:'10px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  {item.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize:'12px', fontWeight:'600', color:'var(--text-muted)', textTransform:'uppercase', marginBottom:'2px' }}>{item.label}</div>
+                  <div style={{ fontSize:'14px', fontWeight:'600', color:'var(--accent)' }}>{item.value}</div>
+                  <div style={{ fontSize:'12px', color:'var(--text-muted)', marginTop:'2px' }}>{item.sub}</div>
+                </div>
+              </div>
             ))}
+
+            {/* Quick Links */}
+            <div style={{ padding:'16px', background:'var(--surface)', borderRadius:'12px', border:'1px solid var(--border)' }}>
+              <div style={{ fontWeight:'700', fontSize:'14px', color:'var(--text-primary)', marginBottom:'12px' }}>🔗 Quick Links</div>
+              {[
+                { label:'💼 Browse Jobs', path:'/jobs' },
+                { label:'💡 Startup Ideas', path:'/startups' },
+                { label:'📊 Dashboard', path:'/dashboard' },
+                { label:'ℹ️ About SkillSync', path:'/about' },
+              ].map((link, i) => (
+                <a key={i} href={link.path} style={{ display:'block', padding:'8px 0', fontSize:'13px', color:'var(--text-secondary)', borderBottom: i < 3 ? '1px solid var(--border)' : 'none', textDecoration:'none' }}>
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Right — Contact Form */}
+          <div style={{ background:'var(--surface)', borderRadius:'16px', border:'1px solid var(--border)', padding:'28px' }}>
+            <h2 style={{ fontSize:'18px', fontWeight:'700', color:'var(--text-primary)', marginBottom:'24px' }}>
+              Send a Message
+            </h2>
+
+            {sent ? (
+              <div style={{ textAlign:'center', padding:'40px 20px' }}>
+                <div style={{ fontSize:'48px', marginBottom:'16px' }}>✅</div>
+                <h3 style={{ fontSize:'18px', fontWeight:'700', color:'var(--text-primary)', marginBottom:'8px' }}>Message Sent!</h3>
+                <p style={{ fontSize:'14px', color:'var(--text-muted)', marginBottom:'20px' }}>Thank you for reaching out. We'll get back to you within 24 hours.</p>
+                <button onClick={() => setSent(false)} className="btn-primary" style={{ padding:'10px 24px' }}>
+                  Send Another Message
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+                {error && (
+                  <div style={{ background:'#fef2f2', border:'1px solid #fecaca', color:'#dc2626', padding:'10px 14px', borderRadius:'8px', fontSize:'13px' }}>
+                    {error}
+                  </div>
+                )}
+
+                <div>
+                  <label style={{ fontSize:'12px', fontWeight:'600', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.5px', display:'block', marginBottom:'6px' }}>
+                    Full Name *
+                  </label>
+                  <input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Eva Mew"
+                    required
+                    className="input"
+                    style={{ width:'100%' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize:'12px', fontWeight:'600', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.5px', display:'block', marginBottom:'6px' }}>
+                    Email Address *
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="your@email.com"
+                    required
+                    className="input"
+                    style={{ width:'100%' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize:'12px', fontWeight:'600', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.5px', display:'block', marginBottom:'6px' }}>
+                    Subject
+                  </label>
+                  <input
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    placeholder="Job recommendation issue..."
+                    className="input"
+                    style={{ width:'100%' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize:'12px', fontWeight:'600', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.5px', display:'block', marginBottom:'6px' }}>
+                    Message *
+                  </label>
+                  <textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    placeholder="Write your message here..."
+                    required
+                    rows={5}
+                    className="input"
+                    style={{ width:'100%', resize:'vertical', fontFamily:'Plus Jakarta Sans, sans-serif' }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="btn-primary"
+                  style={{ padding:'13px', fontSize:'15px', justifyContent:'center', opacity: sending ? 0.7 : 1 }}
+                >
+                  {sending ? '⏳ Sending...' : '✉️ Send Message'}
+                </button>
+
+                <p style={{ fontSize:'12px', color:'var(--text-muted)', textAlign:'center' }}>
+                  We typically respond within 24 hours.
+                </p>
+              </form>
+            )}
           </div>
         </div>
-
-        {/* Contact Form */}
-        <div className="card" style={{ padding: '28px' }}>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '20px' }}>
-            Send a Message
-          </h2>
-
-          {submitted && (
-            <div style={{ background: 'var(--green-light)', border: '1px solid var(--green-border)', color: 'var(--green)', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: '500' }}>
-              ✅ Message sent! We'll get back to you soon.
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Full Name
-              </label>
-              <input
-                type="text"
-                required
-                className="input"
-                placeholder="Eva Mew"
-                value={form.name}
-                onChange={e => setForm({ ...form, name: e.target.value })}
-              />
-            </div>
-
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Email Address
-              </label>
-              <input
-                type="email"
-                required
-                className="input"
-                placeholder="your@email.com"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Subject
-              </label>
-              <input
-                type="text"
-                required
-                className="input"
-                placeholder="Job recommendation issue..."
-                value={form.subject}
-                onChange={e => setForm({ ...form, subject: e.target.value })}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Message
-              </label>
-              <textarea
-                required
-                className="input"
-                placeholder="Write your message here..."
-                rows={5}
-                style={{ resize: 'vertical', minHeight: '120px' }}
-                value={form.message}
-                onChange={e => setForm({ ...form, message: e.target.value })}
-              />
-            </div>
-
-            <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '14px' }}>
-              📨 Send Message
-            </button>
-          </form>
-        </div>
       </div>
-
-      <footer style={{ borderTop: '1px solid var(--border)', textAlign: 'center', padding: '24px', fontSize: '13px', color: 'var(--text-muted)' }}>
-        SkillSync © 2026 — Intelligent Career & Startup Recommendation System
-      </footer>
     </div>
   );
 };

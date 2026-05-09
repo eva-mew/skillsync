@@ -156,8 +156,24 @@ const { theme, toggleTheme } = useTheme();
       <div style={{ fontSize:'13px', opacity:'0.8', marginTop:'4px' }}>We'll keep you updated with the best jobs and startup ideas.</div>
     </div>
     <div style={{ display:'flex', gap:'8px' }}>
-      <input placeholder="Enter your email" style={{ padding:'10px 16px', borderRadius:'8px', border:'none', fontSize:'14px', width:'240px', outline:'none' }} />
-      <button style={{ padding:'10px 20px', background:'white', color:'var(--accent)', border:'none', borderRadius:'8px', fontWeight:'700', cursor:'pointer', fontSize:'14px' }}>Subscribe</button>
+      <input 
+  id="newsletter-email"
+  placeholder="Enter your email" 
+  style={{ padding:'10px 16px', borderRadius:'8px', border:'none', fontSize:'14px', width:'240px', outline:'none' }} 
+/>
+      <button 
+  onClick={() => {
+    const input = document.getElementById('newsletter-email');
+    if (input?.value && input.value.includes('@')) {
+      alert('✅ Thank you for subscribing! We will keep you updated.');
+      input.value = '';
+    } else {
+      alert('Please enter a valid email address.');
+    }
+  }}
+  style={{ padding:'10px 20px', background:'white', color:'var(--accent)', border:'none', borderRadius:'8px', fontWeight:'700', cursor:'pointer', fontSize:'14px' }}>
+  Subscribe
+</button>
     </div>
   </div>
 
@@ -201,25 +217,53 @@ const { theme, toggleTheme } = useTheme();
     {/* Company */}
     <div>
       <div style={{ fontWeight:'700', marginBottom:'16px', fontSize:'15px' }}>Company</div>
-      {['About Us', 'Blog', 'Contact Us', 'Careers'].map((item, i) => (
-        <div key={i} style={{ fontSize:'13px', opacity:'0.75', marginBottom:'10px', cursor:'pointer' }}>{item}</div>
-      ))}
+      {[
+  { label:'About Us', path:'/about' },
+  { label:'Blog', path:'/blog' },
+  { label:'Contact Us', path:'/contact' },
+  { label:'Careers', path:'/careers' }
+].map((item, i) => (
+  <div key={i} 
+    onClick={() => {
+      if(item.path === '/blog' || item.path === '/careers') {
+        alert('🚧 This page is coming soon!');
+      } else {
+        navigate(item.path);
+      }
+    }}
+    style={{ fontSize:'13px', opacity:'0.75', marginBottom:'10px', cursor:'pointer' }}>
+    {item.label}
+  </div>
+))}
     </div>
 
     {/* Help */}
     <div>
       <div style={{ fontWeight:'700', marginBottom:'16px', fontSize:'15px' }}>Help Center</div>
-      {['Site Help', 'FAQs', 'Provide Feedback', 'Report Issue'].map((item, i) => (
-        <div key={i} style={{ fontSize:'13px', opacity:'0.75', marginBottom:'10px', cursor:'pointer' }}>{item}</div>
-      ))}
+      {[
+  { label:'Site Help', path:'/contact' },
+  { label:'FAQs', path:'/about' },
+  { label:'Provide Feedback', path:'/contact' },
+  { label:'Report Issue', path:'/contact' }
+].map((item, i) => (
+  <div key={i}
+    onClick={() => navigate(item.path)}
+    style={{ fontSize:'13px', opacity:'0.75', marginBottom:'10px', cursor:'pointer' }}>
+    {item.label}
+  </div>
+))}
     </div>
 
     {/* Policies */}
     <div>
       <div style={{ fontWeight:'700', marginBottom:'16px', fontSize:'15px' }}>Policies</div>
       {['Privacy Policy', 'Terms & Conditions', 'Trust & Safety', 'Cookie Policy'].map((item, i) => (
-        <div key={i} style={{ fontSize:'13px', opacity:'0.75', marginBottom:'10px', cursor:'pointer' }}>{item}</div>
-      ))}
+  <div key={i}
+    onClick={() => alert(`📄 ${item}\n\nSkillSync respects user privacy and data security. Full policy documentation will be available in the production version.`)}
+    style={{ fontSize:'13px', opacity:'0.75', marginBottom:'10px', cursor:'pointer' }}>
+    {item}
+  </div>
+))}
     </div>
 
   </div>
