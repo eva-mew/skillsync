@@ -66,17 +66,39 @@ const [dateSearched, setDateSearched] = useState(false);
 
     const appsR = await API.get('/applications/all');
     console.log('applications', appsR.data);
-const monthlyR = await API.get('/admin/monthly-applications');
-setMonthlyData(monthlyR.data);
+
+    const msgsR = await API.get('/contact/all');
+    console.log('messages', msgsR.data);
+
+    const newsR = await API.get('/contact/subscribers');
+    console.log('newsletters', newsR.data);
+
+    const jobRepR = await API.get('/admin/job-report');
+    console.log('jobReport', jobRepR.data);
+
+    const userRepR = await API.get('/admin/user-report');
+    console.log('userReport', userRepR.data);
 
     setStats(statsR.data);
     setJobs(jobsR.data);
     setStartups(startupsR.data);
     setUsers(usersR.data);
     setApplications(appsR.data);
+    setMessages(msgsR.data);
+    setNewsletters(newsR.data);
+    setJobReport(jobRepR.data);
+    setUserReport(userRepR.data);
 
   } catch (err) {
     console.error('FETCH ERROR:', err.response || err);
+  }
+
+  try {
+    const monthlyR = await API.get('/admin/monthly-applications');
+    console.log('monthly', monthlyR.data);
+    setMonthlyData(monthlyR.data);
+  } catch (err) {
+    console.error('Monthly error:', err.response?.data || err.message);
   }
 
   setLoading(false);
