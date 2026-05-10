@@ -5,152 +5,169 @@ import { useAuth } from '../context/AuthContext';
 
 const Contact = () => {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
     subject: '',
     message: ''
   });
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const [newsletter, setNewsletter] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState(user?.email || '');
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSending(true);
+    setLoading(true);
     setError('');
     try {
-      await API.post('/contact/submit', formData);
-      setSent(true);
-      setFormData({ name: user?.name || '', email: user?.email || '', subject: '', message: '' });
+      await API.post('/contact/submit', form);
+      setSubmitted(true);
+      setForm({ name: user?.name || '', email: user?.email || '', subject: '', message: '' });
+      setTimeout(() => setSubmitted(false), 5000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send message. Try again.');
+      setError(err.response?.data?.message || 'Failed to send message');
     }
-    setSending(false);
+    setLoading(false);
+  };
+
+  const handleNewsletter = async () => {
+    if (!newsletterEmail) return;
+    setNewsletterLoading(true);
+    try {
+      await API.post('/contact/newsletter', { email: newsletterEmail, name: user?.name || '' });
+      setNewsletter('success');
+    } catch (err) {
+      setNewsletter(err.response?.data?.message || 'Failed to subscribe');
+    }
+    setNewsletterLoading(false);
   };
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)' }}>
       <Navbar />
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '48px 24px' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px' }}>
-          Get In Touch
+
+      {/* HERO */}
+      <div style={{ background: 'var(--accent)', padding: '60px 24px', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: 'white', marginBottom: '12px' }}>
+          Contact Us
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '40px' }}>
-          Have a question or feedback? We'd love to hear from you.
-          {user && <span style={{ color: 'var(--accent)' }}> Your reply will appear in your Dashboard.</span>}
+        <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.85)', maxWidth: '500px', margin: '0 auto' }}>
+          Have a question or feedback? Send us a message and we'll reply in your dashboard!
         </p>
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '32px' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '48px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px,1fr))', gap: '28px' }}>
 
-          {/* Left — Contact Info */}
-          <div>
-            {[
-              { icon: '📧', label: 'Email', value: 'meweva@gmail.com', sub: 'We reply within 24 hours' },
-              { icon: '🏫', label: 'University', value: 'IUBAT', sub: 'International University of Business Agriculture and Technology' },
-              { icon: '📍', label: 'Location', value: 'Dhaka, Bangladesh', sub: 'UTC+6' },
-              { icon: '💻', label: 'GitHub', value: 'github.com/eva-mew/skillsync', sub: 'View source code' },
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '16px', padding: '16px', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '20px', width: '40px', height: '40px', background: 'var(--accent-light)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {item.icon}
-                </div>
-                <div>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px' }}>{item.label}</div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--accent)' }}>{item.value}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{item.sub}</div>
-                </div>
+        {/* Contact Info */}
+        <div>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '20px' }}>
+            Get In Touch
+          </h2>
+
+          {[
+            { icon: '📧', title: 'Email', value: 'meweva@gmail.com', sub: 'Replies appear in your Dashboard' },
+            { icon: '🏫', title: 'University', value: 'IUBAT', sub: 'Dhaka, Bangladesh' },
+            { icon: '💬', title: 'Response Time', value: 'Within 24 hours', sub: 'Check your Dashboard for replies' },
+            { icon: '🔗', title: 'Live Demo', value: 'skillsync-one-rho.vercel.app', sub: 'Try SkillSync now' },
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '20px' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--accent-light)', border: '1px solid var(--accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
+                {item.icon}
               </div>
-            ))}
-
-            {user && (
-              <div style={{ padding: '14px', background: 'var(--accent-light)', border: '1px solid var(--accent-border)', borderRadius: '10px', marginTop: '8px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--accent)', marginBottom: '4px' }}>📬 Internal Messaging</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  You're logged in as <strong>{user.name}</strong>. Admin replies will appear in your Dashboard under "My Messages".
-                </div>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{item.title}</div>
+                <div style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '500' }}>{item.value}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.sub}</div>
               </div>
-            )}
-          </div>
+            </div>
+          ))}
 
-          {/* Right — Contact Form */}
-          <div style={{ background: 'var(--surface)', borderRadius: '16px', border: '1px solid var(--border)', padding: '28px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '24px' }}>
-              ✉️ Send a Message
-            </h2>
-
-            {sent ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>Message Sent!</h3>
-                <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-                  Thank you for reaching out. {user ? "Check your Dashboard for admin replies." : "We'll get back to you soon."}
-                </p>
-                <button onClick={() => setSent(false)} className="btn-primary" style={{ padding: '10px 24px' }}>
-                  Send Another Message
-                </button>
+          {/* Newsletter Box */}
+          <div className="card" style={{ padding: '20px', marginTop: '16px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+              📨 Subscribe to Newsletter
+            </h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+              Get updates about new features and job opportunities.
+            </p>
+            {newsletter === 'success' ? (
+              <div style={{ padding: '10px', background: 'var(--green-light)', border: '1px solid var(--green-border)', borderRadius: '8px', fontSize: '13px', color: 'var(--green)', fontWeight: '600' }}>
+                ✅ Successfully subscribed!
               </div>
             ) : (
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {error && (
-                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px' }}>
-                    {error}
-                  </div>
-                )}
-                {[
-                  { label: 'Full Name *', name: 'name', type: 'text', placeholder: 'Your name' },
-                  { label: 'Email Address *', name: 'email', type: 'email', placeholder: 'your@email.com' },
-                  { label: 'Subject', name: 'subject', type: 'text', placeholder: 'What is this about?' },
-                ].map((field) => (
-                  <div key={field.name}>
-                    <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>
-                      {field.label}
-                    </label>
-                    <input
-                      name={field.name}
-                      type={field.type}
-                      value={formData[field.name]}
-                      onChange={handleChange}
-                      placeholder={field.placeholder}
-                      required={field.label.includes('*')}
-                      className="input"
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                ))}
-                <div>
-                  <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>
-                    Message *
-                  </label>
-                  <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    placeholder="Write your message here..."
-                    required
-                    rows={5}
-                    className="input"
-                    style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit' }}
-                  />
-                </div>
+              <>
+                <input
+                  type="email"
+                  className="input"
+                  placeholder="your@email.com"
+                  value={newsletterEmail}
+                  onChange={e => setNewsletterEmail(e.target.value)}
+                  style={{ marginBottom: '10px' }}
+                />
+                {newsletter && <p style={{ fontSize: '12px', color: '#dc2626', marginBottom: '8px' }}>{newsletter}</p>}
                 <button
-                  type="submit"
-                  disabled={sending}
+                  onClick={handleNewsletter}
+                  disabled={newsletterLoading}
                   className="btn-primary"
-                  style={{ padding: '13px', fontSize: '15px', justifyContent: 'center' }}
+                  style={{ width: '100%', justifyContent: 'center', fontSize: '13px' }}
                 >
-                  {sending ? '⏳ Sending...' : '✉️ Send Message'}
+                  {newsletterLoading ? 'Subscribing...' : '📨 Subscribe'}
                 </button>
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
-                  {user ? '📬 Admin replies will appear in your Dashboard.' : 'We typically respond within 24 hours.'}
-                </p>
-              </form>
+              </>
             )}
           </div>
         </div>
+
+        {/* Contact Form */}
+        <div className="card" style={{ padding: '28px' }}>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '6px' }}>
+            Send a Message
+          </h2>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+            {user ? '💬 Admin reply will appear in your Dashboard.' : '📝 Login to receive replies in your dashboard.'}
+          </p>
+
+          {submitted && (
+            <div style={{ background: 'var(--green-light)', border: '1px solid var(--green-border)', color: 'var(--green)', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: '600' }}>
+              ✅ Message sent! Check your Dashboard for admin reply.
+            </div>
+          )}
+          {error && (
+            <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', color: '#dc2626', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
+              ❌ {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            {[
+              { label: 'Full Name', key: 'name', type: 'text', placeholder: 'Eva Mew' },
+              { label: 'Email Address', key: 'email', type: 'email', placeholder: 'your@email.com' },
+              { label: 'Subject', key: 'subject', type: 'text', placeholder: 'Question about recommendations...' },
+            ].map(f => (
+              <div key={f.key} style={{ marginBottom: '14px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{f.label}</label>
+                <input type={f.type} required={f.key !== 'subject'} className="input" placeholder={f.placeholder} value={form[f.key]} onChange={e => setForm({ ...form, [f.key]: e.target.value })} />
+              </div>
+            ))}
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Message</label>
+              <textarea required className="input" placeholder="Write your message here..." rows={5} style={{ resize: 'vertical', minHeight: '120px' }} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '14px' }}>
+              {loading ? 'Sending...' : '📨 Send Message'}
+            </button>
+          </form>
+        </div>
       </div>
+
+      <footer style={{ borderTop: '1px solid var(--border)', textAlign: 'center', padding: '24px', fontSize: '13px', color: 'var(--text-muted)' }}>
+        SkillSync © 2026 — Skill-Based Career & Startup Matching Platform
+      </footer>
     </div>
   );
 };

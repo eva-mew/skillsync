@@ -1,34 +1,25 @@
 const express = require('express');
 const router = express.Router();
-
+const {
+  submitContact, getAllMessages, getMyMessages,
+  replyMessage, markAsRead, deleteMessage,
+  subscribeNewsletter, getSubscribers, deleteSubscriber
+} = require('../controllers/contactController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
-const {
-  submitContact,
-  getMyMessages,
-  getAllMessages,
-  replyMessage,
-  markAsRead,
-  deleteMessage,
-  subscribe,
-  getSubscribers,
-  deleteSubscriber
-} = require('../controllers/contactController');
-
-// Public routes
+// Public
 router.post('/submit', submitContact);
-router.post('/subscribe', subscribe);
+router.post('/newsletter', subscribeNewsletter);
 
-// User routes
-router.get('/my-messages', protect, getMyMessages);
+// User
+router.get('/my', protect, getMyMessages);
 
-// Admin routes
+// Admin
 router.get('/all', protect, adminOnly, getAllMessages);
-router.put('/reply/:id', protect, adminOnly, replyMessage);
-router.put('/read/:id', protect, adminOnly, markAsRead);
-router.delete('/:id', protect, adminOnly, deleteMessage);
-
 router.get('/subscribers', protect, adminOnly, getSubscribers);
+router.put('/:id/reply', protect, adminOnly, replyMessage);
+router.put('/:id/read', protect, adminOnly, markAsRead);
 router.delete('/subscribers/:id', protect, adminOnly, deleteSubscriber);
+router.delete('/:id', protect, adminOnly, deleteMessage);
 
 module.exports = router;
