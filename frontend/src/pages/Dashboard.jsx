@@ -43,7 +43,7 @@ const Dashboard = () => {
 
       // Fetch messages separately
       try {
-        const msgRes = await API.get('/contact/my-messages');
+        const msgRes = await API.get('/contact/my');
         setMessages(msgRes.data);
       } catch (e) {
         setMessages([]);
@@ -66,7 +66,7 @@ const Dashboard = () => {
   const savedJobs = saved.filter(s => s.itemType === 'job');
   const savedStartups = saved.filter(s => s.itemType === 'startup');
   const strength = profile?.profileComplete || 0;
-  const unreadReplies = messages.filter(m => m.status === 'replied' && m.adminReply).length;
+  const unreadReplies = messages.filter(m => m.status === 'replied' && m.reply).length;
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -288,12 +288,12 @@ const Dashboard = () => {
                     </div>
 
                     {/* Admin Reply */}
-                    {msg.adminReply ? (
+                    {msg.reply ? (
                       <div style={{ padding: '10px 12px', background: 'var(--accent-light)', borderRadius: '8px', border: '1px solid var(--accent-border)' }}>
                         <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent)', marginBottom: '4px', textTransform: 'uppercase' }}>
                           💬 Admin Reply · {new Date(msg.repliedAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short' })}
                         </div>
-                        <div style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.6' }}>{msg.adminReply}</div>
+                        <div style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.6' }}>{msg.reply}</div>
                       </div>
                     ) : (
                       <div style={{ padding: '8px 12px', background: 'var(--orange-light)', borderRadius: '8px', border: '1px solid var(--orange-border)' }}>
