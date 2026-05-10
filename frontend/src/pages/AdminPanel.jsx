@@ -969,9 +969,19 @@ const [dateSearched, setDateSearched] = useState(false);
 
     {/* ── Applications Per User ─────────────────────────────── */}
     <div className="card" style={{ overflow: 'hidden' }}>
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>👥 Applications Per User</h3>
-      </div>
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+  <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>👥 Applications Per User</h3>
+  <button
+    onClick={() => downloadCSV(
+      userReport,
+      'SkillSync_User_Report',
+      ['Name', 'Email', 'Premium', 'Profile %', 'Total Applied', 'Jobs Applied'],
+      u => [u.name, u.email, u.isPremium ? 'Yes' : 'No', u.profileComplete || 0, u.totalApplications, u.applications.map(a => a.jobTitle).join(' | ')]
+    )}
+    className="btn-secondary"
+    style={{ fontSize: '12px', padding: '6px 14px' }}
+  >📥 Download CSV</button>
+</div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
