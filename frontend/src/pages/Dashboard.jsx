@@ -27,15 +27,17 @@ useEffect(() => {
 
   const fetchData = async () => {
     try {
-      const [profileRes, savedRes, jobsRes, startupsRes] = await Promise.all([
+      const [profileRes, savedRes, jobsRes, startupsRes,  messagesRes] = await Promise.all([
         API.get('/profile'),
         API.get('/saved'),
         API.get('/recommend/jobs'),
-        API.get('/recommend/startups')
+        API.get('/recommend/startups'),
+         API.get('/contact/my-messages')
       ]);
       setProfile(profileRes.data);
       setSaved(savedRes.data);
       setStats({ jobs: jobsRes.data.length, startups: startupsRes.data.length });
+      setMyMessages(messagesRes.data);
     } catch (err) {
       console.error(err);
     }
@@ -50,8 +52,7 @@ useEffect(() => {
       console.error(err);
     }
   };
-  const messagesRes = await API.get('/contact/my-messages');
-setMyMessages(messagesRes.data);
+  
 
   const savedJobs = saved.filter(s => s.itemType === 'job');
   const savedStartups = saved.filter(s => s.itemType === 'startup');
