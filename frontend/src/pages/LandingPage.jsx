@@ -4,11 +4,30 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import useTheme from '../useTheme';
 import Navbar from '../components/Navbar';
+import API from '../api';
+import { useState } from 'react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   // eslint-disable-next-line no-unused-vars
 const { theme, toggleTheme } = useTheme();
+const [newsletterEmail, setNewsletterEmail] = useState('');
+const [newsletterMsg, setNewsletterMsg] = useState('');
+
+const handleSubscribe = async () => {
+  if (!newsletterEmail || !newsletterEmail.includes('@')) {
+    setNewsletterMsg('❌ Please enter a valid email address.');
+    return;
+  }
+  try {
+    await API.post('/contact/subscribe', { email: newsletterEmail });
+    setNewsletterMsg('✅ Subscribed successfully! Thank you.');
+    setNewsletterEmail('');
+  } catch (err) {
+    setNewsletterMsg(err.response?.data?.message || '❌ Already subscribed or error occurred.');
+  }
+  setTimeout(() => setNewsletterMsg(''), 4000);
+};
 
   return (
     <div style={{ minHeight:'100vh', background:'var(--bg-secondary)' }}>
@@ -150,32 +169,26 @@ const { theme, toggleTheme } = useTheme();
 <footer style={{ background:'var(--accent)', color:'white', marginTop:'40px' }}>
 
   {/* Newsletter */}
-  <div style={{ borderBottom:'1px solid rgba(255,255,255,0.15)', padding:'32px 40px', display:'flex', alignItems:'center', justifyContent:'center', gap:'24px', flexWrap:'wrap' }}>
-    <div>
-      <div style={{ fontSize:'18px', fontWeight:'700' }}>Subscribe to our newsletter</div>
-      <div style={{ fontSize:'13px', opacity:'0.8', marginTop:'4px' }}>We'll keep you updated with the best jobs and startup ideas.</div>
-    </div>
-    <div style={{ display:'flex', gap:'8px' }}>
-      <input 
-  id="newsletter-email"
-  placeholder="Enter your email" 
-  style={{ padding:'10px 16px', borderRadius:'8px', border:'none', fontSize:'14px', width:'240px', outline:'none' }} 
-/>
-      <button 
-  onClick={() => {
-    const input = document.getElementById('newsletter-email');
-    if (input?.value && input.value.includes('@')) {
-      alert('✅ Thank you for subscribing! We will keep you updated.');
-      input.value = '';
-    } else {
-      alert('Please enter a valid email address.');
-    }
-  }}
-  style={{ padding:'10px 20px', background:'white', color:'var(--accent)', border:'none', borderRadius:'8px', fontWeight:'700', cursor:'pointer', fontSize:'14px' }}>
-  Subscribe
-</button>
-    </div>
+<div style={{ borderBottom:'1px solid rgba(255,255,255,0.15)', padding:'32px 40px', display:'flex', alignItems:'center', justifyContent:'center', gap:'24px', flexWrap:'wrap' }}>
+  <div>
+    <div style={{ fontSize:'18px', fontWeight:'700' }}>Subscribe to our newsletter</div>
+    <div style={{ fontSize:'13px', opacity:'0.8', marginTop:'4px' }}>We'll keep you updated with the best jobs and startup ideas.</div>
+    {newsletterMsg && <div style={{ fontSize:'13px', marginTop:'8px', fontWeight:'600' }}>{newsletterMsg}</div>}
   </div>
+  <div style={{ display:'flex', gap:'8px' }}>
+    <input
+      placeholder="Enter your email"
+      value={newsletterEmail}
+      onChange={(e) => setNewsletterEmail(e.target.value)}
+      style={{ padding:'10px 16px', borderRadius:'8px', border:'none', fontSize:'14px', width:'240px', outline:'none' }}
+    />
+    <button
+      onClick={handleSubscribe}
+      style={{ padding:'10px 20px', background:'white', color:'var(--accent)', border:'none', borderRadius:'8px', fontWeight:'700', cursor:'pointer', fontSize:'14px' }}>
+      Subscribe
+    </button>
+  </div>
+</div>
 
   {/* Links */}
   <div style={{ maxWidth:'1100px', margin:'0 auto', padding:'40px 20px', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(160px,1fr))', gap:'32px' }}>

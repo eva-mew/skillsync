@@ -11,6 +11,8 @@ const Dashboard = () => {
   const [saved, setSaved] = useState([]);
   const [stats, setStats] = useState({ jobs: 0, startups: 0 });
   const [loading, setLoading] = useState(true);
+  const [myMessages, setMyMessages] = useState([]);
+const [showMessages, setShowMessages] = useState(false);
 
 useEffect(() => {
   if (user?.role === 'admin') {
@@ -48,6 +50,8 @@ useEffect(() => {
       console.error(err);
     }
   };
+  const messagesRes = await API.get('/contact/my-messages');
+setMyMessages(messagesRes.data);
 
   const savedJobs = saved.filter(s => s.itemType === 'job');
   const savedStartups = saved.filter(s => s.itemType === 'startup');
@@ -146,6 +150,63 @@ useEffect(() => {
               )}
             </div>
           </div>
+          {/* MY MESSAGES FROM ADMIN */}
+{myMessages.length > 0 && (
+  <div className="card" style={{ padding:'20px', marginTop:'20px' }}>
+    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
+      <h2 style={{ fontSize:'16px', fontWeight:'700', color:'var(--text-primary)' }}>
+        📬 My Messages
+        {myMessages.filter(m => m.status === 'replied').length > 0 && (
+          <span style={{ marginLeft:'8px', background:'var(--green)', color:'white', borderRadius:'100px', fontSize:'11px', padding:'2px 8px', fontWeight:'700' }}>
+            {myMessages.filter(m => m.status === 'replied').length} replied
+          </span>
+        )}
+      </h2>
+      <button onClick={() => setShowMessages(!showMessages)} className="btn-ghost" style={{ fontSize:'13px' }}>
+        {showMessages ? 'Hide' : 'View All →'}
+      </button>
+    </div>
+
+    {showMessages && myMessages.map((msg, i) => (
+      <div key={msg._id} style={{ padding:'16px', background:'var(--bg-secondary)', borderRadius:'10px', marginBottom:'12px', border:'1px solid var(--border)' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'8px' }}>
+          <div>
+            <div style={{ fontSize:'14px', fontWeight:'600', color:'var(--text-primary)' }}>{msg.subject || 'General Inquiry'}</div>
+            <div style={{ fontSize:'12px', color:'var(--text-muted)', marginTop:'2px' }}>
+              {new Date(msg.createdAt).toLocaleDateString()} · {msg.email}
+            </div>
+          </div>
+          <span style={{
+            padding:'3px 10px', borderRadius:'100px', fontSize:'11px', fontWeight:'600',
+            background: msg.status === 'replied' ? 'var(--green-light)' : msg.status === 'read' ? 'var(--accent-light)' : 'var(--orange-light)',
+            color: msg.status === 'replied' ? 'var(--green)' : msg.status === 'read' ? 'var(--accent)' : 'var(--orange)'
+          }}>
+            {msg.status === 'replied' ? '✅ Replied' : msg.status === 'read' ? '👁️ Read' : '🕐 Pending'}
+          </span>
+        </div>
+
+        <div style={{ fontSize:'13px', color:'var(--text-secondary)', marginBottom:'8px', padding:'8px', background:'var(--surface)', borderRadius:'6px' }}>
+          <strong>Your message:</strong> {msg.message}
+        </div>
+
+        {msg.adminReply && (
+          <div style={{ fontSize:'13px', color:'var(--text-primary)', padding:'10px', background:'var(--accent-light)', border:'1px solid var(--accent-border)', borderRadius:'8px', marginTop:'8px' }}>
+            <div style={{ fontWeight:'700', color:'var(--accent)', marginBottom:'4px', fontSize:'12px' }}>
+              💬 Admin Reply · {new Date(msg.repliedAt).toLocaleDateString()}
+            </div>
+            {msg.adminReply}
+          </div>
+        )}
+      </div>
+    ))}
+
+    {!showMessages && (
+      <p style={{ fontSize:'13px', color:'var(--text-muted)' }}>
+        You have {myMessages.length} message(s). {myMessages.filter(m => m.adminReply).length} replied.
+      </p>
+    )}
+  </div>
+)}
 
           {/* RIGHT COLUMN */}
           <div>

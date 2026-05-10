@@ -13,7 +13,7 @@ const applicationRoutes = require('./routes/applicationRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();  // ← must come before any app.use()
-
+const contactRoutes = require('./routes/contactRoutes');
 connectDB();
 app.use(cors({
   origin: [
@@ -37,7 +37,7 @@ app.use('/api/saved', savedRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/payment', paymentRoutes);  // ← once, in the right place
-
+app.use('/api/contact', contactRoutes);
 app.get('/', (req, res) => {
   res.json({ message: 'SkillSync API is running!', status: 'success' });
 });

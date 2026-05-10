@@ -65,6 +65,11 @@ const downloadUsersCSV = () => {
   document.body.appendChild(link); link.click();
   document.body.removeChild(link); URL.revokeObjectURL(url);
 };
+const [messages, setMessages] = useState([]);
+const [subscribers, setSubscribers] = useState([]);
+const [replyText, setReplyText] = useState({});
+const [replySuccess, setReplySuccess] = useState('');
+
 useEffect(() => {
   if (user && user.role !== 'admin') {
     navigate('/dashboard');
@@ -74,18 +79,22 @@ useEffect(() => {
 }, []);
   const fetchData = async () => {
     try {
-      const [jobsRes, startupsRes, usersRes, statsRes,appRes] = await Promise.all([
+      const [jobsRes, startupsRes, usersRes, statsRes,appRes, messagesRes, subscribersRes] = await Promise.all([
         API.get('/jobs'),
         API.get('/startups'),
         API.get('/admin/users'),
         API.get('/admin/stats'),
-        API.get('/applications/all')
+        API.get('/applications/all'),
+        API.get('/contact/all'),
+API.get('/contact/subscribers')
       ]);
       setJobs(jobsRes.data);
       setStartups(startupsRes.data);
       setUsers(usersRes.data);
       setStats(statsRes.data);
       setApplications(appRes.data);
+      setMessages(messagesRes.data);
+      setSubscribers(subscribersRes.data);
     } catch (err) {
       console.error(err);
     }
@@ -389,7 +398,7 @@ useEffect(() => {
 
         {/* TABS */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', background: 'var(--surface)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border)', width: 'fit-content' }}>
-          {['jobs', 'startups', 'users', 'applications'].map(tab => (
+          {['jobs', 'startups', 'users', 'applications', 'messages', 'subscribers'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -402,7 +411,19 @@ useEffect(() => {
                 textTransform: 'capitalize'
               }}
             >
-              {tab === 'jobs' ? '💼' : tab === 'startups' ? '💡' : '👥'} {tab}
+              {
+  tab === 'jobs'
+    ? '💼'
+    : tab === 'startups'
+    ? '💡'
+    : tab === 'applications'
+    ? '📋'
+    : tab === 'messages'
+    ? '📬'
+    : tab === 'subscribers'
+    ? '📧'
+    : '👥'
+} {tab}
             </button>
           ))}
         </div>
@@ -573,6 +594,7 @@ useEffect(() => {
   </div>
 )}
         {/* APPLICATIONS TABLE */}
+
 {activeTab === 'applications' && (
   <div className="card" style={{ overflow:'hidden' }}>
     <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -678,6 +700,17 @@ useEffect(() => {
         </tbody>
       </table>
     </div>
+  </div>
+)}
+{activeTab === 'messages' && (
+  <div>
+    MESSAGE TAB CODE HERE
+  </div>
+)}
+
+{activeTab === 'subscribers' && (
+  <div>
+    SUBSCRIBERS TAB CODE HERE
   </div>
 )}
       </div>
