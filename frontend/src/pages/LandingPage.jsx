@@ -5,15 +5,106 @@ import { useNavigate } from 'react-router-dom';
 import useTheme from '../useTheme';
 import Navbar from '../components/Navbar';
 import API from '../api';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+// Animated counter hook — add this OUTSIDE the component
+const useCountUp = (target, duration = 2000, startCounting = false) => {
+  const [count, setCount] = useState(0);
 
+  useEffect(() => {
+    if (!startCounting) return;
+    let start = 0;
+    const isPercent = String(target).includes('%');
+    const isK = String(target).includes('k');
+    const isPlus = String(target).includes('+');
+
+    let numericTarget = parseFloat(String(target).replace(/[^0-9.]/g, ''));
+    if (isK) numericTarget = numericTarget * 1000;
+
+    const increment = numericTarget / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= numericTarget) {
+        setCount(numericTarget);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [startCounting, target, duration]);
+
+  const display = () => {
+    const isK = String(target).includes('k');
+    const isPlus = String(target).includes('+');
+    const isPercent = String(target).includes('%');
+
+    if (isK && count >= 1000) return `${(count / 1000).toFixed(0)}k${isPlus ? '+' : ''}`;
+    if (isPlus && !isK) return `${count.toLocaleString()}+`;
+    if (isPercent) return `${count}%`;
+    return count.toLocaleString();
+  };
+
+  return display();
+};
+const StatCard = ({ target, label, index, startCounting }) => {
+  const count = useCountUp(target, 2000, startCounting);
+  return (
+    <div style={{
+      textAlign: 'center', padding: '28px 16px',
+      borderRight: index % 2 === 0 ? '1px solid var(--border)' : 'none',
+      borderBottom: index < 2 ? '1px solid var(--border)' : 'none',
+      transition: 'transform 0.2s',
+    }}
+      onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+      onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+    >
+      <div style={{
+        fontSize: '1.8rem', fontWeight: '800',
+        background: 'linear-gradient(135deg, var(--accent), #06b6d4)',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+        transition: 'all 0.3s',
+        minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }}>
+        {startCounting ? count : '0'}
+      </div>
+      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '500' }}>
+        {label}
+      </div>
+    </div>
+  );
+};
 const LandingPage = () => {
   const navigate = useNavigate();
   // eslint-disable-next-line no-unused-vars
 const { theme, toggleTheme } = useTheme();
 const [newsletterEmail, setNewsletterEmail] = useState('');
 const [newsletterMsg, setNewsletterMsg] = useState('');
+const heroImages = [
+  'https://images.unsplash.com/photo-1664464683525-29b5d442af54?w=1600',
+  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600',
+  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600',
+  'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1600',
+];
 
+const [currentSlide, setCurrentSlide] = useState(0);
+
+useEffect(() => {
+  const timer = setInterval(() => {
+    setCurrentSlide(prev => (prev + 1) % heroImages.length);
+  }, 4000);
+  return () => clearInterval(timer);
+}, []);
+const [statsVisible, setStatsVisible] = useState(false);
+const statsRef = useRef(null);
+
+useEffect(() => {
+  const observer = new IntersectionObserver(
+    ([entry]) => { if (entry.isIntersecting) setStatsVisible(true); },
+    { threshold: 0.3 }
+  );
+  if (statsRef.current) observer.observe(statsRef.current);
+  return () => observer.disconnect();
+}, []);
 const handleSubscribe = async () => {
   if (!newsletterEmail || !newsletterEmail.includes('@')) {
     setNewsletterMsg('❌ Please enter a valid email address.');
@@ -37,60 +128,84 @@ const handleSubscribe = async () => {
 
       {/* HERO */}
 <div style={{
-  backgroundImage: 'url(https://images.unsplash.com/photo-1664464683525-29b5d442af54?w=1600)',
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
   position: 'relative',
-   minHeight: '100vh',
+  minHeight: '100vh',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  overflow: 'hidden',
 }}>
+  {/* Slider Images */}
+  {heroImages.map((img, i) => (
+    <div key={i} style={{
+      position: 'absolute', inset: 0,
+      backgroundImage: `url(${img})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      opacity: i === currentSlide ? 1 : 0,
+      transition: 'opacity 1.2s ease-in-out',
+      zIndex: 0,
+    }} />
+  ))}
+
+  {/* Dark overlay */}
+  <div style={{ position: 'absolute', inset: 0, background: 'rgba(3,7,18,0.72)', zIndex: 1 }} />
+
+  {/* Slide indicators */}
   <div style={{
-    position: 'absolute', inset: 0,
-    background: 'rgba(3, 7, 18, 0.75)',
-  }} />
-  <div style={{ textAlign:'center', padding:'60px 20px 48px', position:'relative', zIndex:1, width:'100%' }}>
-    <h1 style={{ fontSize:'clamp(2rem,6vw,4.5rem)', fontWeight:'800', letterSpacing:'-2px', lineHeight:'1.05', color:'white', marginBottom:'20px' }}>
+    position: 'absolute', bottom: '28px', left: '50%',
+    transform: 'translateX(-50%)', display: 'flex', gap: '8px', zIndex: 3
+  }}>
+    {heroImages.map((_, i) => (
+      <div
+        key={i}
+        onClick={() => setCurrentSlide(i)}
+        style={{
+          width: i === currentSlide ? '28px' : '8px',
+          height: '8px', borderRadius: '100px',
+          background: i === currentSlide ? 'white' : 'rgba(255,255,255,0.4)',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+        }}
+      />
+    ))}
+  </div>
+
+  {/* Content */}
+  <div style={{ textAlign: 'center', padding: '60px 20px 48px', position: 'relative', zIndex: 2, width: '100%' }}>
+    <h1 style={{ fontSize: 'clamp(2rem,6vw,4.5rem)', fontWeight: '800', letterSpacing: '-2px', lineHeight: '1.05', color: 'white', marginBottom: '20px' }}>
       Your Skills.<br />
-      <span style={{ background:'linear-gradient(135deg, #1a7a3a, #4ade80)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
+      <span style={{ background: 'linear-gradient(135deg, #4ade80, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
         Your Perfect Match.
       </span>
     </h1>
-    <p style={{ fontSize:'1rem', color:'rgba(255,255,255,0.7)', maxWidth:'500px', margin:'0 auto 32px', lineHeight:'1.75' }}>
+    <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.75)', maxWidth: '500px', margin: '0 auto 32px', lineHeight: '1.75' }}>
       SkillSync analyzes your skill set and recommends the best jobs and startup ideas — with a real match percentage for every result.
     </p>
-    <div style={{ display:'flex', gap:'12px', justifyContent:'center', flexWrap:'wrap' }}>
-      <button onClick={() => navigate('/register')} className="btn-primary" style={{ padding:'13px 28px', fontSize:'15px', borderRadius:'10px' }}>
+    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+      <button onClick={() => navigate('/register')} className="btn-primary" style={{ padding: '13px 28px', fontSize: '15px', borderRadius: '10px' }}>
         Build My Profile →
       </button>
-      <button onClick={() => navigate('/login')} className="btn-secondary" style={{ padding:'13px 24px', fontSize:'15px', borderRadius:'10px' }}>
+      <button onClick={() => navigate('/login')} className="btn-secondary" style={{ padding: '13px 24px', fontSize: '15px', borderRadius: '10px' }}>
         Sign In
       </button>
     </div>
   </div>
 </div>
 
-      {/* STATS — 2x2 grid on mobile */}
-      <div style={{ background:'var(--surface)', borderTop:'1px solid var(--border)', borderBottom:'1px solid var(--border)' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', maxWidth:'800px', margin:'0 auto' }}>
-          {[
-            { num:'2,400+', label:'Jobs Indexed' },
-            { num:'850+', label:'Startup Ideas' },
-            { num:'12k+', label:'Users Matched' },
-            { num:'94%', label:'Match Accuracy' }
-          ].map((s, i) => (
-            <div key={i} style={{
-              textAlign:'center', padding:'24px 16px',
-              borderRight: i % 2 === 0 ? '1px solid var(--border)' : 'none',
-              borderBottom: i < 2 ? '1px solid var(--border)' : 'none'
-            }}>
-              <div style={{ fontSize:'1.6rem', fontWeight:'800', background:'linear-gradient(135deg, #1a7a3a, #4ade80)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>{s.num}</div>
-              <div style={{ fontSize:'12px', color:'var(--text-muted)', marginTop:'4px' }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+     {/* STATS */}
+<div ref={statsRef} style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', maxWidth: '800px', margin: '0 auto' }}>
+    {[
+      { target: '2400+', label: 'Jobs Indexed' },
+      { target: '850+', label: 'Startup Ideas' },
+      { target: '12k+', label: 'Users Matched' },
+      { target: '94%', label: 'Match Accuracy' },
+    ].map((s, i) => (
+      <StatCard key={i} target={s.target} label={s.label} index={i} startCounting={statsVisible} />
+    ))}
+  </div>
+</div>
 
       {/* HOW IT WORKS */}
       <div style={{ maxWidth:'1000px', margin:'0 auto', padding:'56px 20px' }}>

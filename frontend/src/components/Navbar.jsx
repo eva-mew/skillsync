@@ -73,21 +73,34 @@ const userLinks = user?.role === 'admin'
           {/* Center Nav Links — always visible */}
           <div style={{ display: 'flex', gap: '4px' }}>
             {navLinks.map(link => (
-              <button
-                key={link.path}
-                onClick={() => navigate(link.path)}
-                style={{
-                  padding: '8px 16px', borderRadius: '8px', border: 'none',
-                  background: isActive(link.path) ? 'var(--accent-light)' : 'transparent',
-                  color: isActive(link.path) ? 'var(--accent)' : 'var(--text-secondary)',
-                  fontWeight: isActive(link.path) ? '600' : '500',
-                  fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
-                  fontFamily: 'Plus Jakarta Sans, sans-serif'
-                }}
-              >
-                {link.label}
-              </button>
-            ))}
+  <button
+    key={link.path}
+    onClick={() => navigate(link.path)}
+    onMouseEnter={e => {
+      if (!isActive(link.path)) {
+        e.target.style.background = 'var(--accent-light)';
+        e.target.style.color = 'var(--accent)';
+      }
+    }}
+    onMouseLeave={e => {
+      if (!isActive(link.path)) {
+        e.target.style.background = 'transparent';
+        e.target.style.color = 'var(--text-secondary)';
+      }
+    }}
+    style={{
+      padding: '8px 16px', borderRadius: '8px', border: 'none',
+      background: isActive(link.path) ? 'var(--accent-light)' : 'transparent',
+      color: isActive(link.path) ? 'var(--accent)' : 'var(--text-secondary)',
+      fontWeight: isActive(link.path) ? '600' : '500',
+      fontSize: '14px', cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      fontFamily: 'Plus Jakarta Sans, sans-serif'
+    }}
+  >
+    {link.label}
+  </button>
+))}
           </div>
 
           {/* Right Side */}
