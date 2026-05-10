@@ -186,7 +186,12 @@ API.get('/contact/subscribers')
     <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)' }}>
       <Navbar />
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '28px 24px' }}>
+      <div style={{
+  width: '100%',
+  maxWidth: '1400px',
+  margin: '0 auto',
+  padding: '28px 24px'
+}}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -216,7 +221,7 @@ API.get('/contact/subscribers')
         )}
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '14px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: '14px', marginBottom: '24px' }}>
           {[
             { num: stats.totalUsers, label: 'Total Users', icon: '👥', color: 'var(--accent)' },
   { num: stats.totalJobs, label: 'Total Jobs', icon: '💼', color: 'var(--green)' },
@@ -397,7 +402,17 @@ API.get('/contact/subscribers')
         )}
 
         {/* TABS */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', background: 'var(--surface)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border)', width: 'fit-content' }}>
+       <div style={{
+  display: 'flex',
+  gap: '4px',
+  marginBottom: '20px',
+  background: 'var(--surface)',
+  padding: '4px',
+  borderRadius: '10px',
+  border: '1px solid var(--border)',
+  overflowX: 'auto',
+  width: '100%'
+}}>
           {['jobs', 'startups', 'users', 'applications', 'messages', 'subscribers'].map(tab => (
             <button
               key={tab}
@@ -430,7 +445,7 @@ API.get('/contact/subscribers')
 
         {/* JOBS TABLE */}
         {activeTab === 'jobs' && (
-          <div className="card" style={{ overflow: 'hidden' }}>
+  <div className="card" style={{ overflowX: 'auto', width: '100%' }}>
 <div className="table-wrap">
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -465,7 +480,7 @@ API.get('/contact/subscribers')
 
         {/* STARTUPS TABLE */}
         {activeTab === 'startups' && (
-          <div className="card" style={{ overflow: 'hidden' }}>
+  <div className="card" style={{ overflowX: 'auto', width: '100%' }}>
             <div className="table-wrap">
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -501,7 +516,7 @@ API.get('/contact/subscribers')
         )}
 
        {activeTab === 'users' && (
-  <div className="card" style={{ overflow: 'hidden' }}>
+  <div className="card" style={{ overflowX: 'auto', width: '100%' }}>
     <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>
         👥 All Registered Users
@@ -596,7 +611,7 @@ API.get('/contact/subscribers')
         {/* APPLICATIONS TABLE */}
 
 {activeTab === 'applications' && (
-  <div className="card" style={{ overflow:'hidden' }}>
+  <div className="card" style={{ overflowX:'auto', width:'100%' }}>
     <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
       <h3 style={{ fontSize:'16px', fontWeight:'700', color:'var(--text-primary)' }}>
         📋 All Job Applications
