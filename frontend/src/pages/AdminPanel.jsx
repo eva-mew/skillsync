@@ -37,6 +37,10 @@ const AdminPanel = () => {
   const emptyStartup = { title: '', description: '', category: '', requiredSkills: '', budget: 'low', difficulty: 'beginner', estimatedCost: '', potentialRevenue: '', timeToLaunch: '', viabilityScore: 70, roadmap: '' };
   const [jobForm, setJobForm] = useState(emptyJob);
   const [startupForm, setStartupForm] = useState(emptyStartup);
+  const [monthlyData, setMonthlyData] = useState([]);
+const [filteredApps, setFilteredApps] = useState([]);
+const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
+const [dateSearched, setDateSearched] = useState(false);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -44,32 +48,39 @@ const AdminPanel = () => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [statsR, jobsR, startupsR, usersR, appsR, msgsR, newsR, jobRepR, userRepR] = await Promise.all([
-        API.get('/admin/stats'),
-        API.get('/jobs'),
-        API.get('/startups'),
-        API.get('/admin/users'),
-        API.get('/applications/all'),
-        API.get('/contact/all'),
-        API.get('/contact/subscribers'),
-        API.get('/admin/job-report'),
-        API.get('/admin/user-report'),
-      ]);
-      setStats(statsR.data);
-      setJobs(jobsR.data);
-      setStartups(startupsR.data);
-      setUsers(usersR.data);
-      setApplications(appsR.data);
-      setMessages(msgsR.data);
-      setNewsletters(newsR.data);
-      setJobReport(jobRepR.data);
-      setUserReport(userRepR.data);
-    } catch (err) { console.error(err); }
-    setLoading(false);
-  };
+ const fetchData = async () => {
+  setLoading(true);
+
+  try {
+    const statsR = await API.get('/admin/stats');
+    console.log('stats', statsR.data);
+
+    const jobsR = await API.get('/jobs');
+    console.log('jobs', jobsR.data);
+
+    const startupsR = await API.get('/startups');
+    console.log('startups', startupsR.data);
+
+    const usersR = await API.get('/admin/users');
+    console.log('users', usersR.data);
+
+    const appsR = await API.get('/applications/all');
+    console.log('applications', appsR.data);
+const monthlyR = await API.get('/admin/monthly-applications');
+setMonthlyData(monthlyR.data);
+
+    setStats(statsR.data);
+    setJobs(jobsR.data);
+    setStartups(startupsR.data);
+    setUsers(usersR.data);
+    setApplications(appsR.data);
+
+  } catch (err) {
+    console.error('FETCH ERROR:', err.response || err);
+  }
+
+  setLoading(false);
+};
 
   // ── Job CRUD ──────────────────────────────────────────────────
   const handleJobSubmit = async () => {
@@ -668,98 +679,319 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* ══ REPORTS TAB ══ */}
-        {activeTab === 'reports' && (
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '20px' }}>📈 Reports & Analytics</h2>
+       {/* ══ REPORTS TAB ══ */}
+{activeTab === 'reports' && (
+  <div>
+    <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '20px' }}>📈 Reports & Analytics</h2>
 
-            {/* Job Report */}
-            <div className="card" style={{ overflow: 'hidden', marginBottom: '24px' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>💼 Applications Per Job</h3>
-                <button onClick={downloadJobReportCSV} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 14px' }}>📥 Download Report</button>
-              </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-                      {['#', 'Job Title', 'Company', 'Premium', 'Total Apps', 'Latest Application'].map(h => (
-                        <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {jobReport.map((j, i) => (
-                      <tr key={j.jobId} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
-                        <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>{i + 1}</td>
-                        <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{j.title}</td>
-                        <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{j.company}</td>
-                        <td style={{ padding: '10px 14px' }}>
-                          {j.isPremium ? <span style={{ padding: '2px 8px', borderRadius: '100px', background: '#fef3c7', color: '#d97706', fontSize: '11px', fontWeight: '700' }}>👑</span>
-                            : <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</span>}
-                        </td>
-                        <td style={{ padding: '10px 14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: `${Math.min(j.totalApplications * 10, 80)}px`, height: '6px', background: 'var(--accent)', borderRadius: '3px' }} />
-                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)' }}>{j.totalApplications}</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                          {j.applications[0] ? new Date(j.applications[0].appliedAt).toLocaleDateString() : '—'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+    {/* ── Monthly Bar Chart ─────────────────────────────────── */}
+    <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
+      <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>
+        📊 Monthly Application Trends
+      </h3>
 
-            {/* User Report */}
-            <div className="card" style={{ overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>👥 Applications Per User</h3>
-              </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-                      {['#', 'User Name', 'Email', 'Premium', 'Profile %', 'Total Applied', 'Jobs Applied'].map(h => (
-                        <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {userReport.map((u, i) => (
-                      <tr key={u.userId} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
-                        <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>{i + 1}</td>
-                        <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{u.name}</td>
-                        <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{u.email}</td>
-                        <td style={{ padding: '10px 14px' }}>
-                          {u.isPremium ? <span style={{ padding: '2px 8px', borderRadius: '100px', background: '#fef3c7', color: '#d97706', fontSize: '11px', fontWeight: '700' }}>👑</span>
-                            : <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Free</span>}
-                        </td>
-                        <td style={{ padding: '10px 14px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>{u.profileComplete || 0}%</td>
-                        <td style={{ padding: '10px 14px' }}>
-                          <span style={{ padding: '3px 10px', borderRadius: '100px', background: u.totalApplications > 0 ? 'var(--accent-light)' : 'var(--bg-secondary)', color: u.totalApplications > 0 ? 'var(--accent)' : 'var(--text-muted)', fontSize: '13px', fontWeight: '700' }}>
-                            {u.totalApplications}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px 14px' }}>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', maxWidth: '200px' }}>
-                            {u.applications.slice(0, 2).map((a, j) => (
-                              <span key={j} style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{a.jobTitle}</span>
-                            ))}
-                            {u.applications.length > 2 && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>+{u.applications.length - 2} more</span>}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+      {monthlyData.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No application data yet</div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          {/* Simple hand-rolled bar chart — no recharts dep needed for this one */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', minHeight: '160px', padding: '0 4px 0 4px' }}>
+            {monthlyData.map((d, i) => {
+              const maxTotal = Math.max(...monthlyData.map(x => x.total), 1);
+              const barH = Math.max((d.total / maxTotal) * 130, 8);
+              return (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flex: '1', minWidth: '44px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent)' }}>{d.total}</span>
+                  <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', gap: '1px', borderRadius: '6px 6px 0 0', overflow: 'hidden' }}>
+                    <div style={{ height: `${Math.round((d.shortlisted / d.total) * barH) || 2}px`, background: '#22c55e', transition: 'height 0.5s' }} title={`Shortlisted: ${d.shortlisted}`} />
+                    <div style={{ height: `${Math.round((d.pending / d.total) * barH) || 2}px`, background: '#f59e0b', transition: 'height 0.5s' }} title={`Pending: ${d.pending}`} />
+                    <div style={{ height: `${Math.round((d.rejected / d.total) * barH) || 2}px`, background: '#ef4444', transition: 'height 0.5s' }} title={`Rejected: ${d.rejected}`} />
+                  </div>
+                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', whiteSpace: 'nowrap' }}>{d.label}</span>
+                </div>
+              );
+            })}
           </div>
+          {/* Legend */}
+          <div style={{ display: 'flex', gap: '16px', marginTop: '14px', flexWrap: 'wrap' }}>
+            {[['#22c55e', 'Shortlisted'], ['#f59e0b', 'Pending'], ['#ef4444', 'Rejected']].map(([color, label]) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: color }} />
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Monthly Summary Table */}
+      {monthlyData.length > 0 && (
+        <div style={{ overflowX: 'auto', marginTop: '20px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+                {['Month', 'Total', 'Pending', 'Shortlisted', 'Rejected'].map(h => (
+                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {monthlyData.map((d, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                  <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{d.label}</td>
+                  <td style={{ padding: '10px 14px' }}>
+                    <span style={{ fontWeight: '700', color: 'var(--accent)', fontSize: '14px' }}>{d.total}</span>
+                  </td>
+                  <td style={{ padding: '10px 14px' }}>
+                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fef3c7', color: '#b45309', fontSize: '12px', fontWeight: '700' }}>{d.pending}</span>
+                  </td>
+                  <td style={{ padding: '10px 14px' }}>
+                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#d1fae5', color: '#065f46', fontSize: '12px', fontWeight: '700' }}>{d.shortlisted}</span>
+                  </td>
+                  <td style={{ padding: '10px 14px' }}>
+                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fee2e2', color: '#991b1b', fontSize: '12px', fontWeight: '700' }}>{d.rejected}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => downloadCSV(
+                monthlyData, 'SkillSync_Monthly_Report',
+                ['Month', 'Total', 'Pending', 'Shortlisted', 'Rejected'],
+                d => [d.label, d.total, d.pending, d.shortlisted, d.rejected]
+              )}
+              className="btn-secondary"
+              style={{ fontSize: '12px', padding: '7px 16px' }}
+            >📥 Download Monthly CSV</button>
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* ── Date Range Filter ─────────────────────────────────── */}
+    <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
+      <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px' }}>
+        📅 Filter Applications by Date
+      </h3>
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div>
+          <label style={labelStyle}>Start Date</label>
+          <input
+            type="date"
+            style={{ ...inputStyle, maxWidth: '180px' }}
+            value={dateFilter.start}
+            onChange={e => setDateFilter({ ...dateFilter, start: e.target.value })}
+          />
+        </div>
+        <div>
+          <label style={labelStyle}>End Date</label>
+          <input
+            type="date"
+            style={{ ...inputStyle, maxWidth: '180px' }}
+            value={dateFilter.end}
+            onChange={e => setDateFilter({ ...dateFilter, end: e.target.value })}
+          />
+        </div>
+        <button
+          onClick={async () => {
+            try {
+              const params = new URLSearchParams();
+              if (dateFilter.start) params.append('start', dateFilter.start);
+              if (dateFilter.end)   params.append('end', dateFilter.end);
+              const r = await API.get(`/admin/applications-by-date?${params.toString()}`);
+              setFilteredApps(r.data);
+              setDateSearched(true);
+            } catch (err) { alert('Failed to fetch'); }
+          }}
+          className="btn-primary"
+          style={{ padding: '10px 20px', fontSize: '13px' }}
+        >🔍 Search</button>
+        {dateSearched && (
+          <button
+            onClick={() => { setFilteredApps([]); setDateFilter({ start: '', end: '' }); setDateSearched(false); }}
+            className="btn-secondary"
+            style={{ padding: '10px 16px', fontSize: '13px' }}
+          >✖ Clear</button>
         )}
+      </div>
+
+      {dateSearched && (
+        <div style={{ marginTop: '18px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              Found <strong style={{ color: 'var(--accent)' }}>{filteredApps.length}</strong> application{filteredApps.length !== 1 ? 's' : ''}
+              {dateFilter.start && ` from ${new Date(dateFilter.start).toLocaleDateString()}`}
+              {dateFilter.end && ` to ${new Date(dateFilter.end).toLocaleDateString()}`}
+            </span>
+            {filteredApps.length > 0 && (
+              <button
+                onClick={() => downloadCSV(
+                  filteredApps, `SkillSync_Apps_${dateFilter.start || 'all'}_to_${dateFilter.end || 'now'}`,
+                  ['Applicant', 'Email', 'Job Title', 'Company', 'Status', 'Applied Date'],
+                  a => [a.applicantName, a.applicantEmail, a.jobTitle, a.company, a.status, new Date(a.appliedAt).toLocaleDateString()]
+                )}
+                className="btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 14px' }}
+              >📥 Download CSV</button>
+            )}
+          </div>
+
+          {filteredApps.length === 0 ? (
+            <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+              No applications found for this date range.
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+                    {['#', 'Applicant', 'Email', 'Job Title', 'Company', 'Status', 'Applied Date'].map(h => (
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredApps.map((app, i) => (
+                    <tr key={app._id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                      <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>{i + 1}</td>
+                      <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{app.applicantName}</td>
+                      <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{app.applicantEmail}</td>
+                      <td style={{ padding: '10px 14px', fontSize: '13px', color: 'var(--text-primary)' }}>{app.jobTitle}</td>
+                      <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{app.company}</td>
+                      <td style={{ padding: '10px 14px' }}>
+                        <span style={{
+                          padding: '2px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: '700',
+                          background: app.status === 'shortlisted' ? '#d1fae5' : app.status === 'rejected' ? '#fee2e2' : app.status === 'viewed' ? '#dbeafe' : '#fef3c7',
+                          color: app.status === 'shortlisted' ? '#065f46' : app.status === 'rejected' ? '#991b1b' : app.status === 'viewed' ? '#1e40af' : '#92400e'
+                        }}>{app.status}</span>
+                      </td>
+                      <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        {new Date(app.appliedAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+
+    {/* ── Per-Job Applicant Export ──────────────────────────── */}
+    <div className="card" style={{ overflow: 'hidden', marginBottom: '24px' }}>
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>💼 Applications Per Job</h3>
+        <button onClick={downloadJobReportCSV} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 14px' }}>📥 Download Summary CSV</button>
+      </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+              {['#', 'Job Title', 'Company', 'Premium', 'Total Apps', 'Posted', 'Export'].map(h => (
+                <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {jobReport.map((j, i) => (
+              <tr key={j.jobId} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>{i + 1}</td>
+                <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{j.title}</td>
+                <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{j.company}</td>
+                <td style={{ padding: '10px 14px' }}>
+                  {j.isPremium
+                    ? <span style={{ padding: '2px 8px', borderRadius: '100px', background: '#fef3c7', color: '#d97706', fontSize: '11px', fontWeight: '700' }}>👑</span>
+                    : <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>—</span>}
+                </td>
+                <td style={{ padding: '10px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: `${Math.min(j.totalApplications * 10, 80)}px`, height: '6px', background: 'var(--accent)', borderRadius: '3px' }} />
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)' }}>{j.totalApplications}</span>
+                  </div>
+                </td>
+                <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                  {new Date(j.createdAt).toLocaleDateString()}
+                </td>
+                <td style={{ padding: '10px 14px' }}>
+                  <button
+                    disabled={j.totalApplications === 0}
+                    onClick={async () => {
+                      try {
+                        const r = await API.get(`/admin/job/${j.jobId}/applicants`);
+                        downloadCSV(
+                          r.data,
+                          `Applicants_${j.title.replace(/\s+/g, '_')}`,
+                          ['Name', 'Email', 'Experience', 'Skills', 'Status', 'Applied Date'],
+                          a => [a.applicantName, a.applicantEmail, a.experience, (a.skills || []).join(' | '), a.status, new Date(a.appliedAt).toLocaleDateString()]
+                        );
+                      } catch (err) { alert('Failed to fetch applicants'); }
+                    }}
+                    style={{
+                      padding: '5px 12px', borderRadius: '6px', border: '1px solid var(--accent)',
+                      background: j.totalApplications === 0 ? 'var(--bg-secondary)' : 'var(--accent-light)',
+                      color: j.totalApplications === 0 ? 'var(--text-muted)' : 'var(--accent)',
+                      fontSize: '12px', fontWeight: '600', cursor: j.totalApplications === 0 ? 'not-allowed' : 'pointer',
+                      opacity: j.totalApplications === 0 ? 0.5 : 1
+                    }}
+                  >📥 Export</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {/* ── Applications Per User ─────────────────────────────── */}
+    <div className="card" style={{ overflow: 'hidden' }}>
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>👥 Applications Per User</h3>
+      </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+              {['#', 'User Name', 'Email', 'Premium', 'Profile %', 'Total Applied', 'Jobs Applied'].map(h => (
+                <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {userReport.map((u, i) => (
+              <tr key={u.userId} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>{i + 1}</td>
+                <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{u.name}</td>
+                <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{u.email}</td>
+                <td style={{ padding: '10px 14px' }}>
+                  {u.isPremium
+                    ? <span style={{ padding: '2px 8px', borderRadius: '100px', background: '#fef3c7', color: '#d97706', fontSize: '11px', fontWeight: '700' }}>👑</span>
+                    : <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Free</span>}
+                </td>
+                <td style={{ padding: '10px 14px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>{u.profileComplete || 0}%</td>
+                <td style={{ padding: '10px 14px' }}>
+                  <span style={{ padding: '3px 10px', borderRadius: '100px', background: u.totalApplications > 0 ? 'var(--accent-light)' : 'var(--bg-secondary)', color: u.totalApplications > 0 ? 'var(--accent)' : 'var(--text-muted)', fontSize: '13px', fontWeight: '700' }}>
+                    {u.totalApplications}
+                  </span>
+                </td>
+                <td style={{ padding: '10px 14px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', maxWidth: '200px' }}>
+                    {u.applications.slice(0, 2).map((a, j) => (
+                      <span key={j} style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{a.jobTitle}</span>
+                    ))}
+                    {u.applications.length > 2 && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>+{u.applications.length - 2} more</span>}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* ══ MESSAGES TAB ══ */}
         {activeTab === 'messages' && (

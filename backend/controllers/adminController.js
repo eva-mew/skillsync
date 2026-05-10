@@ -66,5 +66,51 @@ const getUserReport = async (req, res) => {
     res.json(report.sort((a, b) => b.totalApplications - a.totalApplications));
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
+// GET /api/admin/monthly-applications
+const getMonthlyApplications = async (req, res) => {
+  try {
+    const data = await Application.aggregate([
+      {
+        $group: {
+          _id: { month: { $month: '$appliedAt' }, year: { $year: '$appliedAt' } },
+          total: { $sum: 1 },
+          shortlisted: { $sum: { $cond: [{ $eq: ['$status', 'shortlisted'] }, 1, 0] } },
+          rejected:    { $sum: { $cond: [{ $eq: ['$status', 'rejected']    }, 1, 0] } },
+          pending:     { $sum: { $cond: [{ $eq: ['$status', 'pending']     }, 1, 0] } },
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    res.json(data.map(d => ({
+      label: `${months[d._id.month - 1]} ${d._id.year}`,
+      month: d._id.month, year: d._id.year,
+      total: d.total, shortlisted: d.shortlisted,
+      rejected: d.rejected, pending: d.pending
+    })));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
 
-module.exports = { getUsers, getStats, getJobReport, getUserReport };
+// GET /api/admin/applications-by-date?start=2026-01-01&end=2026-01-31
+const getApplicationsByDate = async (req, res) => {
+  try {
+    const { start, end } = req.query;
+    const filter = {};
+    if (start || end) {
+      filter.appliedAt = {};
+      if (start) filter.appliedAt.$gte = new Date(start);
+      if (end)   filter.appliedAt.$lte = new Date(new Date(end).setHours(23, 59, 59, 999));
+    }
+    const apps = await Application.find(filter).sort({ appliedAt: -1 });
+    res.json(apps);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+// GET /api/admin/job/:jobId/applicants
+const getJobApplicants = async (req, res) => {
+  try {
+    const apps = await Application.find({ jobId: req.params.jobId }).sort({ appliedAt: -1 });
+    res.json(apps);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+module.exports = { getUsers, getStats, getJobReport, getUserReport, getMonthlyApplications, getApplicationsByDate, getJobApplicants };
