@@ -27,7 +27,7 @@ const getMyMessages = async (req, res) => {
   try {
     const msgs = await ContactMessage.find({
       $or: [{ userId: req.user._id }, { email: req.user.email }],
-      reply: { $ne: null }
+      
     }).sort({ createdAt: -1 });
     res.json(msgs);
   } catch (err) { res.status(500).json({ message: err.message }); }
