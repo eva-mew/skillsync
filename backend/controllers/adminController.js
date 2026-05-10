@@ -3,54 +3,68 @@ const Job = require('../models/Job');
 const Startup = require('../models/Startup');
 const Application = require('../models/Application');
 
-// @route  GET /api/admin/users
-// @access Admin only
-const getAllUsers = async (req, res) => {
+// GET /api/admin/users
+const getUsers = async (req, res) => {
   try {
-    const users = await User.find({}).select('-password');
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
     res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// @route  DELETE /api/admin/users/:id
-// @access Admin only
-const deleteUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    if (user.role === 'admin') {
-      return res.status(400).json({ message: 'Cannot delete admin user' });
-    }
-    await User.findByIdAndDelete(req.params.id);
-    res.json({ message: 'User deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @route  GET /api/admin/stats
-// @access Admin only
+// GET /api/admin/stats
 const getStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments({ role: 'user' });
-    const totalJobs = await Job.countDocuments();
-    const totalStartups = await Startup.countDocuments();
-const totalApplications = await Application.countDocuments();
-    res.json({
-      totalUsers,
-      totalJobs,
-      totalStartups,
-      totalApplications
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+    const [totalUsers, totalJobs, totalStartups, totalApplications] = await Promise.all([
+      User.countDocuments(),
+      Job.countDocuments(),
+      Startup.countDocuments(),
+      Application.countDocuments()
+    ]);
+    res.json({ totalUsers, totalJobs, totalStartups, totalApplications });
+  } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
+// GET /api/admin/job-report — applications per job
+const getJobReport = async (req, res) => {
+  try {
+    const jobs = await Job.find().select('title company createdAt isPremium');
+    const report = await Promise.all(jobs.map(async (job) => {
+      const apps = await Application.find({ jobId: job._id })
+        .select('applicantName applicantEmail status appliedAt');
+      return {
+        jobId: job._id,
+        title: job.title,
+        company: job.company,
+        isPremium: job.isPremium,
+        createdAt: job.createdAt,
+        totalApplications: apps.length,
+        applications: apps
+      };
+    }));
+    res.json(report.sort((a, b) => b.totalApplications - a.totalApplications));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
 
+// GET /api/admin/user-report — applications per user
+const getUserReport = async (req, res) => {
+  try {
+    const users = await User.find({ role: 'user' }).select('-password');
+    const report = await Promise.all(users.map(async (user) => {
+      const apps = await Application.find({ userId: user._id })
+        .select('jobTitle company status appliedAt');
+      return {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        skills: user.skills,
+        isPremium: user.isPremium,
+        profileComplete: user.profileComplete,
+        totalApplications: apps.length,
+        applications: apps
+      };
+    }));
+    res.json(report.sort((a, b) => b.totalApplications - a.totalApplications));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
 
-module.exports = { getAllUsers, deleteUser, getStats };
+module.exports = { getUsers, getStats, getJobReport, getUserReport };

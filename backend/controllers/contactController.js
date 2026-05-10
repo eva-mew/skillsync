@@ -1,7 +1,6 @@
 const ContactMessage = require('../models/ContactMessage');
 const Newsletter = require('../models/Newsletter');
 
-// POST /api/contact/submit — public
 const submitContact = async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
@@ -13,11 +12,10 @@ const submitContact = async (req, res) => {
       message,
       userId: req.user?._id || null
     });
-    res.status(201).json({ message: 'Message sent!', id: msg._id });
+    res.status(201).json({ message: 'Message sent successfully!', id: msg._id });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// GET /api/contact/all — admin only
 const getAllMessages = async (req, res) => {
   try {
     const msgs = await ContactMessage.find().sort({ createdAt: -1 });
@@ -25,21 +23,20 @@ const getAllMessages = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// GET /api/contact/my — user own messages
 const getMyMessages = async (req, res) => {
   try {
     const msgs = await ContactMessage.find({
-      $or: [{ userId: req.user._id }, { email: req.user.email }]
+      $or: [{ userId: req.user._id }, { email: req.user.email }],
+      reply: { $ne: null }
     }).sort({ createdAt: -1 });
     res.json(msgs);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// PUT /api/contact/:id/reply — admin only
 const replyMessage = async (req, res) => {
   try {
     const { reply } = req.body;
-    if (!reply) return res.status(400).json({ message: 'Reply is empty' });
+    if (!reply) return res.status(400).json({ message: 'Reply cannot be empty' });
     const msg = await ContactMessage.findByIdAndUpdate(
       req.params.id,
       { reply, repliedAt: new Date(), repliedBy: req.user.name, status: 'replied' },
@@ -50,7 +47,6 @@ const replyMessage = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// PUT /api/contact/:id/read — admin only
 const markAsRead = async (req, res) => {
   try {
     await ContactMessage.findByIdAndUpdate(req.params.id, { status: 'read' });
@@ -58,7 +54,6 @@ const markAsRead = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// DELETE /api/contact/:id — admin only
 const deleteMessage = async (req, res) => {
   try {
     await ContactMessage.findByIdAndDelete(req.params.id);
@@ -66,7 +61,6 @@ const deleteMessage = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// POST /api/contact/newsletter — public
 const subscribeNewsletter = async (req, res) => {
   try {
     const { email, name } = req.body;
@@ -78,7 +72,6 @@ const subscribeNewsletter = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// GET /api/contact/subscribers — admin only
 const getSubscribers = async (req, res) => {
   try {
     const subs = await Newsletter.find().sort({ createdAt: -1 });
@@ -86,7 +79,6 @@ const getSubscribers = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// DELETE /api/contact/subscribers/:id — admin only
 const deleteSubscriber = async (req, res) => {
   try {
     await Newsletter.findByIdAndDelete(req.params.id);
