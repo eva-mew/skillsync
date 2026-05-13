@@ -711,26 +711,34 @@ const [dateSearched, setDateSearched] = useState(false);
                   </div>
                 </td>
 
-                {/* CV */}
-                <td style={{ padding:'12px 16px' }}>
-                  {app.cvFileName ? (
-                    
-                      href={`${process.env.REACT_APP_API_URL}/applications/cv/${app._id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        padding:'5px 10px', background:'var(--accent-light)', color:'var(--accent)',
-                        border:'1px solid var(--accent-border)', borderRadius:'6px',
-                        fontSize:'12px', fontWeight:'600', textDecoration:'none',
-                        display:'inline-flex', alignItems:'center', gap:'4px', whiteSpace:'nowrap'
-                      }}
-                    >
-                      📄 View CV
-                    </a>
-                  ) : (
-                    <span style={{ fontSize:'12px', color:'var(--text-muted)' }}>No CV</span>
-                  )}
-                </td>
+  {/* CV */}
+<td style={{ padding:'12px 16px' }}>
+  {app.cvFileName ? (
+    <a
+      href={`${process.env.REACT_APP_API_URL}/applications/cv/${app._id}`}
+      target="_blank"
+      rel="noreferrer"
+      style={{
+        padding:'5px 10px',
+        background:'var(--accent-light)',
+        color:'var(--accent)',
+        border:'1px solid var(--accent-border)',
+        borderRadius:'6px',
+        fontSize:'12px',
+        fontWeight:'600',
+        textDecoration:'none',
+        display:'inline-flex',
+        alignItems:'center',
+        gap:'4px',
+        whiteSpace:'nowrap'
+      }}
+    >
+      📄 View CV
+    </a>
+  ) : (
+    <span style={{ fontSize:'12px', color:'var(--text-muted)' }}>No CV</span>
+  )}
+</td>
 
                 {/* Status badge */}
                 <td style={{ padding:'12px 16px' }}>
