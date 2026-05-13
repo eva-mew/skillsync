@@ -17,26 +17,62 @@ exports.applyJob = async (req, res) => {
     const job = await Job.findById(jobId);
     if (!job) return res.status(404).json({ message: 'Job not found' });
 
-    // ── Skill match check ─────────────────────────────────────────────────
-    if (!user.skills || user.skills.length === 0) {
-      return res.status(400).json({
-        message: 'Please complete your profile and add skills before applying.'
-      });
-    }
+ // ── Skill match check ─────────────────────────────────────────────────
 
-    const normalizeSkill = (skill) =>
-  skill.toLowerCase().replace(/[^a-z0-9+#.]/g, '').trim();
+if (!user.skills || user.skills.length === 0) {
+  return res.status(400).json({
+    message: 'Please complete your profile and add skills before applying.'
+  });
+}
 
-const userSkillsLower = user.skills.map(normalizeSkill);
-const jobSkillsLower = job.requiredSkills.map(normalizeSkill);
-    const matchedSkills = jobSkillsLower.filter(s => userSkillsLower.includes(s));
+// Normalize helper
+const normalizeSkill = (skill) => {
+  if (!skill) return '';
 
-    if (matchedSkills.length === 0) {
-      return res.status(400).json({
-        message: `You need at least 1 matching skill to apply. This job requires: ${job.requiredSkills.join(', ')}`
-      });
-    }
+  // object support
+  if (typeof skill === 'object') {
+    skill = skill.name || '';
+  }
 
+  return skill
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9+#.]/g, '')
+    .trim();
+};
+
+// Safe arrays
+const userSkills = Array.isArray(user.skills)
+  ? user.skills
+  : [];
+
+const jobSkills = Array.isArray(job.requiredSkills)
+  ? job.requiredSkills
+  : [];
+
+// Normalize
+const userSkillsLower = userSkills.map(normalizeSkill);
+const jobSkillsLower = jobSkills.map(normalizeSkill);
+
+// Match
+const matchedSkills = jobSkillsLower.filter(skill =>
+  userSkillsLower.includes(skill)
+);
+
+// DEBUG
+console.log('USER RAW:', user.skills);
+console.log('JOB RAW:', job.requiredSkills);
+
+console.log('USER NORMALIZED:', userSkillsLower);
+console.log('JOB NORMALIZED:', jobSkillsLower);
+
+console.log('MATCHED:', matchedSkills);
+
+if (matchedSkills.length === 0) {
+  return res.status(400).json({
+    message: `You need at least 1 matching skill to apply. This job requires: ${jobSkills.join(', ')}`
+  });
+}
     // Calculate match score
     const matchScore = Math.round(
       (matchedSkills.length / job.requiredSkills.length) * 70 +

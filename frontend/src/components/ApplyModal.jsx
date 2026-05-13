@@ -8,19 +8,47 @@ const ApplyModal = ({ job, userSkills, onClose, onSuccess }) => {
   const [error, setError] = useState('');
   const fileRef = useRef();
 
-  // Calculate match
-  const jobSkills = job.requiredSkills || [];
-  const matchedSkills = jobSkills.filter(s =>
-    userSkills.map(u => u.toLowerCase()).includes(s.toLowerCase())
-  );
-  const unmatched = jobSkills.filter(s =>
-    !userSkills.map(u => u.toLowerCase()).includes(s.toLowerCase())
-  );
-  const matchPct = jobSkills.length > 0
-    ? Math.round((matchedSkills.length / jobSkills.length) * 100)
-    : 0;
+  // Normalize helper
+const normalizeSkill = (skill) => {
+  if (!skill) return '';
 
-  const canApply = matchedSkills.length > 0;
+  // object support
+  if (typeof skill === 'object') {
+    skill = skill.name || '';
+  }
+
+  return skill
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9+#.]/g, '')
+    .trim();
+};
+
+// Calculate match
+const jobSkills = Array.isArray(job.requiredSkills)
+  ? job.requiredSkills
+  : [];
+
+const normalizedUserSkills = (userSkills || []).map(normalizeSkill);
+
+const matchedSkills = jobSkills.filter(skill =>
+  normalizedUserSkills.includes(normalizeSkill(skill))
+);
+
+const unmatched = jobSkills.filter(skill =>
+  !normalizedUserSkills.includes(normalizeSkill(skill))
+);
+
+const matchPct = jobSkills.length > 0
+  ? Math.round((matchedSkills.length / jobSkills.length) * 100)
+  : 0;
+
+const canApply = matchedSkills.length > 0;
+
+console.log('USER SKILLS:', userSkills);
+console.log('NORMALIZED USER:', normalizedUserSkills);
+console.log('JOB SKILLS:', jobSkills);
+console.log('MATCHED:', matchedSkills);
 
   const handleFile = (file) => {
     if (!file) return;

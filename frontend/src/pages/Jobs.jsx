@@ -7,6 +7,7 @@ import API from '../api';
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [profileSkills, setProfileSkills] = useState([]);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({ workMode: '', type: '', experience: '' });
   const [mode, setMode] = useState('recommended');
@@ -26,7 +27,18 @@ const Jobs = () => {
     } catch (err) { console.error(err); }
     setLoading(false);
   };
+useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const res = await API.get('/profile');
+      setProfileSkills(res.data.skills || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
+  fetchProfile();
+}, []);
   const filtered = jobs.filter(job => {
     const matchSearch = job.title.toLowerCase().includes(search.toLowerCase()) ||
       job.company.toLowerCase().includes(search.toLowerCase());
@@ -194,11 +206,20 @@ const Jobs = () => {
           ) : (
             filtered.map(job => (
               <JobCard
-                key={job._id}
-                job={job}
-                onCompare={() => handleCompare(job)}
-                isInCompare={isInCompare(job._id)}
-              />
+  key={job._id}
+  job={job}
+  profileSkills={profileSkills}
+  onSave={handleSave}
+  saved={savedJobs.includes(job._id)}
+  onCompare={() => {
+    if (compareList.find(j => j._id === job._id)) {
+      setCompareList(compareList.filter(j => j._id !== job._id));
+    } else if (compareList.length < 2) {
+      setCompareList([...compareList, job]);
+    }
+  }}
+  isInCompare={!!compareList.find(j => j._id === job._id)}
+/>
             ))
           )}
         </div>

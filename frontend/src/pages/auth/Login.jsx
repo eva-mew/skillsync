@@ -18,6 +18,7 @@ const Login = () => {
   setError('');
   try {
     const res = await API.post('/auth/login', formData);
+    console.log("LOGIN RESPONSE:", res.data);
     login(res.data, res.data.token);
 
     // ← CHANGE THIS: redirect by role

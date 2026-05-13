@@ -27,9 +27,19 @@ const getMatchLabel = (score) => {
   return '📋 Possible';
 };
 
-const JobCard = ({ job, onSave, saved = false, onCompare, isInCompare = false }) => {
+const JobCard = ({
+  job,
+  onSave,
+  saved = false,
+  onCompare,
+  isInCompare = false,
+  profileSkills = []
+}) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+   const userSkills = profileSkills.length > 0
+  ? profileSkills
+  : (user?.skills || []);
 const [showApplyModal, setShowApplyModal] = useState(false);
 const [applied, setApplied] = useState(false);
   const [isSaved, setIsSaved] = useState(saved);
@@ -243,8 +253,8 @@ const handleApply = async () => {
 {/* Apply Modal */}
 {showApplyModal && (
   <ApplyModal
-    job={job}
-    userSkills={user?.skills || []}
+  job={job}
+  userSkills={userSkills}
     onClose={() => setShowApplyModal(false)}
     onSuccess={() => {
       setApplied(true);

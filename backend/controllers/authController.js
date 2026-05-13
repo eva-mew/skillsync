@@ -32,13 +32,22 @@ const register = async (req, res) => {
       password: hashedPassword
     });
 
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id)
-    });
+  res.status(201).json({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+
+  // ADD THESE
+  skills: user.skills,
+  experience: user.experience,
+  interests: user.interests,
+  budget: user.budget,
+  workPreference: user.workPreference,
+  profileComplete: user.profileComplete,
+
+  token: generateToken(user._id)
+});
 
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -69,13 +78,22 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id)
-    });
+  res.json({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+
+  // ADD THESE
+  skills: user.skills,
+  experience: user.experience,
+  interests: user.interests,
+  budget: user.budget,
+  workPreference: user.workPreference,
+  profileComplete: user.profileComplete,
+
+  token: generateToken(user._id)
+});
 
   } catch (error) {
     res.status(500).json({ message: error.message });
