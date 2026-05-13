@@ -1,25 +1,7 @@
 const Application = require('../models/Application');
 const User = require('../models/User');
 const Job = require('../models/Job');
-const multer = require('multer');
 
-// Multer — memory storage (stores file in RAM, then we save to MongoDB)
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf' ||
-        file.mimetype === 'application/msword' ||
-        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF and Word documents are allowed'), false);
-    }
-  }
-});
-
-exports.uploadMiddleware = upload.single('cv');
 
 // ── Apply for a job ──────────────────────────────────────────────────────────
 exports.applyJob = async (req, res) => {
