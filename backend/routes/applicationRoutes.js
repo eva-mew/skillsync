@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const auth = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 const {
   applyJob, getUserApplications, getAllApplications,
   getJobApplications, updateStatus, downloadCV
@@ -22,13 +22,13 @@ const upload = multer({
 });
 
 // User routes
-router.post('/', auth, upload.single('cv'), applyJob);
-router.get('/my', auth, getUserApplications);
-router.get('/cv/:id', auth, downloadCV);
+router.post('/', protect, upload.single('cv'), applyJob);
+router.get('/my', protect, getUserApplications);
+router.get('/cv/:id', protect, downloadCV);
 
 // Admin routes
-router.get('/all', auth, getAllApplications);
-router.get('/job/:jobId', auth, getJobApplications);
-router.put('/:id/status', auth, updateStatus);
+router.get('/all', protect, getAllApplications);
+router.get('/job/:jobId', protect, getJobApplications);
+router.put('/:id/status', protect, updateStatus);
 
 module.exports = router;

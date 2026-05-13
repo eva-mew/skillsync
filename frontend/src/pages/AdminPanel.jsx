@@ -18,6 +18,7 @@ const AdminPanel = () => {
   const [jobReport, setJobReport] = useState([]);
   const [userReport, setUserReport] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [success, setSuccess] = useState('');
 
   // Forms
   const [showJobForm, setShowJobForm] = useState(false);
@@ -711,7 +712,7 @@ const [dateSearched, setDateSearched] = useState(false);
                   </div>
                 </td>
 
-   {/* CV */}Expand comment
+   {/* CV */}
 <td style={{ padding:'12px 16px' }}>
   {app.cvFileName ? (
     <a
