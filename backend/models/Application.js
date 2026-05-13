@@ -15,13 +15,12 @@ const ApplicationSchema = new mongoose.Schema({
   cvData:         { type: Buffer },
   cvMimeType:     { type: String },
   // Status
-  status: {
-    type: String,
-    enum: ['pending', 'viewed', 'shortlisted', 'rejected', 'selected'],
-    default: 'pending'
-  },
+  status: { type: String, default: 'pending' },
+statusReason: { type: String, default: '' },
   adminNote:  { type: String, default: '' },
-  appliedAt:  { type: Date, default: Date.now }
+  appliedAt:  { type: Date, default: Date.now },
+  
 });
+
 
 module.exports = mongoose.model('Application', ApplicationSchema);

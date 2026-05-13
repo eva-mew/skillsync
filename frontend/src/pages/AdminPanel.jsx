@@ -19,6 +19,12 @@ const AdminPanel = () => {
   const [userReport, setUserReport] = useState([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
+  const [statusModal, setStatusModal] = useState({
+    open: false,
+    appId: null,
+    newStatus: '',
+    reason: '',
+  });
 
   // Forms
   const [showJobForm, setShowJobForm] = useState(false);
@@ -258,6 +264,7 @@ const [dateSearched, setDateSearched] = useState(false);
   );
 
   return (
+    <>
     <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)' }}>
       <Navbar />
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '28px 20px' }}>
@@ -750,25 +757,61 @@ const [dateSearched, setDateSearched] = useState(false);
   )}
 </td>
 
-                {/* Status badge */}
-                <td style={{ padding:'12px 16px' }}>
-                  <span style={{
-                    padding:'3px 10px', borderRadius:'100px', fontSize:'11px', fontWeight:'600',
-                    background: app.status === 'selected' ? '#1a7a3a' :
-                                app.status === 'shortlisted' ? 'var(--green-light)' :
-                                app.status === 'rejected' ? '#fef2f2' :
-                                app.status === 'viewed' ? 'var(--accent-light)' : 'var(--orange-light)',
-                    color: app.status === 'selected' ? 'white' :
-                           app.status === 'shortlisted' ? 'var(--green)' :
-                           app.status === 'rejected' ? '#dc2626' :
-                           app.status === 'viewed' ? 'var(--accent)' : 'var(--orange)',
-                  }}>
-                    {app.status === 'pending' ? '🕐 Pending' :
-                     app.status === 'viewed' ? '👁️ Viewed' :
-                     app.status === 'shortlisted' ? '⭐ Shortlisted' :
-                     app.status === 'selected' ? '🏆 Selected' : '❌ Rejected'}
-                  </span>
+                {/* Status badge + reason */}
+                <td style={{ padding: '12px 16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{
+                      padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: '600', display: 'inline-block',
+                      background: app.status === 'selected'    ? '#1a7a3a' :
+                                  app.status === 'shortlisted' ? 'var(--green-light)' :
+                                  app.status === 'rejected'    ? '#fef2f2' :
+                                  app.status === 'viewed'      ? 'var(--accent-light)' : 'var(--orange-light)',
+                      color:      app.status === 'selected'    ? 'white' :
+                                  app.status === 'shortlisted' ? 'var(--green)' :
+                                  app.status === 'rejected'    ? '#dc2626' :
+                                  app.status === 'viewed'      ? 'var(--accent)' : 'var(--orange)',
+                    }}>
+                      {app.status === 'pending'     ? '🕐 Pending'     :
+                       app.status === 'viewed'      ? '👁️ Viewed'      :
+                       app.status === 'shortlisted' ? '⭐ Shortlisted' :
+                       app.status === 'selected'    ? '🏆 Selected'    : '❌ Rejected'}
+                    </span>
+                    {app.statusReason && (
+                      <span style={{
+                        fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic',
+                        maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        display: 'block',
+                      }} title={app.statusReason}>
+                        💬 {app.statusReason}
+                      </span>
+                    )}
+                  </div>
                 </td>
+ 
+// ---- ACTION CELL — replace the
+                  <select
+                    value={app.status}
+                    onChange={(e) => {
+                      // Open modal — don't call API yet
+                      setStatusModal({
+                        open: true,
+                        appId: app._id,
+                        newStatus: e.target.value,
+                        reason: '',
+                      });
+                    }}
+                    style={{
+                      padding: '5px 8px', borderRadius: '6px', border: '1px solid var(--border2)',
+                      background: 'var(--surface)', color: 'var(--text-primary)',
+                      fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', minWidth: '110px'
+                    }}
+                  >
+                    <option value="pending">🕐 Pending</option>
+                    <option value="viewed">👁️ Viewed</option>
+                    <option value="shortlisted">⭐ Shortlisted</option>
+                    <option value="selected">🏆 Selected</option>
+                    <option value="rejected">❌ Rejected</option>
+                  </select>
 
                 {/* Status dropdown */}
                 <td style={{ padding:'12px 16px' }}>
@@ -849,30 +892,59 @@ const [dateSearched, setDateSearched] = useState(false);
       </h3>
 
       {monthlyData.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No application data yet</div>
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+          No application data yet
+        </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
-          {/* Simple hand-rolled bar chart — no recharts dep needed for this one */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', minHeight: '160px', padding: '0 4px 0 4px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', minHeight: '160px', padding: '0 4px' }}>
             {monthlyData.map((d, i) => {
               const maxTotal = Math.max(...monthlyData.map(x => x.total), 1);
               const barH = Math.max((d.total / maxTotal) * 130, 8);
+              const selected   = d.selected   || 0;
+              const shortlisted = d.shortlisted || 0;
+              const pending    = d.pending    || 0;
+              const rejected   = d.rejected   || 0;
+              const safeTotal  = Math.max(d.total, 1);
               return (
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flex: '1', minWidth: '44px' }}>
                   <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent)' }}>{d.total}</span>
-                  <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', gap: '1px', borderRadius: '6px 6px 0 0', overflow: 'hidden' }}>
-                    <div style={{ height: `${Math.round((d.shortlisted / d.total) * barH) || 2}px`, background: '#22c55e', transition: 'height 0.5s' }} title={`Shortlisted: ${d.shortlisted}`} />
-                    <div style={{ height: `${Math.round((d.pending / d.total) * barH) || 2}px`, background: '#f59e0b', transition: 'height 0.5s' }} title={`Pending: ${d.pending}`} />
-                    <div style={{ height: `${Math.round((d.rejected / d.total) * barH) || 2}px`, background: '#ef4444', transition: 'height 0.5s' }} title={`Rejected: ${d.rejected}`} />
+                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1px', borderRadius: '6px 6px 0 0', overflow: 'hidden' }}>
+                    {/* Selected — blue */}
+                    <div
+                      style={{ height: `${Math.round((selected / safeTotal) * barH) || (selected > 0 ? 3 : 0)}px`, background: '#3b82f6', transition: 'height 0.5s' }}
+                      title={`Selected: ${selected}`}
+                    />
+                    {/* Shortlisted — green */}
+                    <div
+                      style={{ height: `${Math.round((shortlisted / safeTotal) * barH) || (shortlisted > 0 ? 3 : 0)}px`, background: '#22c55e', transition: 'height 0.5s' }}
+                      title={`Shortlisted: ${shortlisted}`}
+                    />
+                    {/* Pending — amber */}
+                    <div
+                      style={{ height: `${Math.round((pending / safeTotal) * barH) || (pending > 0 ? 3 : 0)}px`, background: '#f59e0b', transition: 'height 0.5s' }}
+                      title={`Pending: ${pending}`}
+                    />
+                    {/* Rejected — red */}
+                    <div
+                      style={{ height: `${Math.round((rejected / safeTotal) * barH) || (rejected > 0 ? 3 : 0)}px`, background: '#ef4444', transition: 'height 0.5s' }}
+                      title={`Rejected: ${rejected}`}
+                    />
                   </div>
                   <span style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', whiteSpace: 'nowrap' }}>{d.label}</span>
                 </div>
               );
             })}
           </div>
+ 
           {/* Legend */}
           <div style={{ display: 'flex', gap: '16px', marginTop: '14px', flexWrap: 'wrap' }}>
-            {[['#22c55e', 'Shortlisted'], ['#f59e0b', 'Pending'], ['#ef4444', 'Rejected']].map(([color, label]) => (
+            {[
+              ['#3b82f6', 'Selected'],
+              ['#22c55e', 'Shortlisted'],
+              ['#f59e0b', 'Pending'],
+              ['#ef4444', 'Rejected'],
+            ].map(([color, label]) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: color }} />
                 <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{label}</span>
@@ -881,14 +953,14 @@ const [dateSearched, setDateSearched] = useState(false);
           </div>
         </div>
       )}
-
-      {/* Monthly Summary Table */}
+ 
+      {/* Monthly Summary Table — add Selected column */}
       {monthlyData.length > 0 && (
         <div style={{ overflowX: 'auto', marginTop: '20px' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-                {['Month', 'Total', 'Pending', 'Shortlisted', 'Rejected'].map(h => (
+                {['Month', 'Total', 'Pending', 'Shortlisted', 'Selected', 'Rejected'].map(h => (
                   <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{h}</th>
                 ))}
               </tr>
@@ -901,13 +973,16 @@ const [dateSearched, setDateSearched] = useState(false);
                     <span style={{ fontWeight: '700', color: 'var(--accent)', fontSize: '14px' }}>{d.total}</span>
                   </td>
                   <td style={{ padding: '10px 14px' }}>
-                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fef3c7', color: '#b45309', fontSize: '12px', fontWeight: '700' }}>{d.pending}</span>
+                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fef3c7', color: '#b45309', fontSize: '12px', fontWeight: '700' }}>{d.pending || 0}</span>
                   </td>
                   <td style={{ padding: '10px 14px' }}>
-                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#d1fae5', color: '#065f46', fontSize: '12px', fontWeight: '700' }}>{d.shortlisted}</span>
+                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#d1fae5', color: '#065f46', fontSize: '12px', fontWeight: '700' }}>{d.shortlisted || 0}</span>
                   </td>
                   <td style={{ padding: '10px 14px' }}>
-                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fee2e2', color: '#991b1b', fontSize: '12px', fontWeight: '700' }}>{d.rejected}</span>
+                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#dbeafe', color: '#1e40af', fontSize: '12px', fontWeight: '700' }}>{d.selected || 0}</span>
+                  </td>
+                  <td style={{ padding: '10px 14px' }}>
+                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fee2e2', color: '#991b1b', fontSize: '12px', fontWeight: '700' }}>{d.rejected || 0}</span>
                   </td>
                 </tr>
               ))}
@@ -917,8 +992,8 @@ const [dateSearched, setDateSearched] = useState(false);
             <button
               onClick={() => downloadCSV(
                 monthlyData, 'SkillSync_Monthly_Report',
-                ['Month', 'Total', 'Pending', 'Shortlisted', 'Rejected'],
-                d => [d.label, d.total, d.pending, d.shortlisted, d.rejected]
+                ['Month', 'Total', 'Pending', 'Shortlisted', 'Selected', 'Rejected'],
+                d => [d.label, d.total, d.pending || 0, d.shortlisted || 0, d.selected || 0, d.rejected || 0]
               )}
               className="btn-secondary"
               style={{ fontSize: '12px', padding: '7px 16px' }}
@@ -926,6 +1001,7 @@ const [dateSearched, setDateSearched] = useState(false);
           </div>
         </div>
       )}
+ 
     </div>
 
     {/* ── Date Range Filter ─────────────────────────────────── */}
@@ -1286,10 +1362,132 @@ const [dateSearched, setDateSearched] = useState(false);
             </div>
           </div>
         )}
+        
 
       </div>
     </div>
+     {/* ══ STATUS REASON MODAL ══ */}
+      {statusModal.open && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+        }}>
+          <div style={{
+            background: 'var(--surface)', borderRadius: '16px', padding: '28px',
+            width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+            border: '1px solid var(--border)',
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <span style={{ fontSize: '22px' }}>
+                {statusModal.newStatus === 'selected'    ? '🏆' :
+                 statusModal.newStatus === 'shortlisted' ? '⭐' :
+                 statusModal.newStatus === 'rejected'    ? '❌' :
+                 statusModal.newStatus === 'viewed'      ? '👁️' : '🕐'}
+              </span>
+              <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, textTransform: 'capitalize' }}>
+                Mark as {statusModal.newStatus}
+              </h3>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '18px' }}>
+              {statusModal.newStatus === 'selected'    ? 'Congratulations! Why is this candidate being selected?' :
+               statusModal.newStatus === 'shortlisted' ? 'What made this candidate stand out?' :
+               statusModal.newStatus === 'rejected'    ? 'Please note why this application is being rejected.' :
+               statusModal.newStatus === 'viewed'      ? 'Add an optional note about this application.' :
+               'Add an optional note.'}
+            </p>
+ 
+            {/* Reason textarea */}
+            <textarea
+              autoFocus
+              placeholder={
+                statusModal.newStatus === 'selected'    ? 'e.g. Strong React skills, great culture fit, passed technical round.' :
+                statusModal.newStatus === 'shortlisted' ? 'e.g. Good skill match, invite for interview.' :
+                statusModal.newStatus === 'rejected'    ? 'e.g. Does not meet minimum experience requirement.' :
+                'Optional note...'
+              }
+              value={statusModal.reason}
+              onChange={e => setStatusModal(prev => ({ ...prev, reason: e.target.value }))}
+              rows={3}
+              style={{
+                width: '100%', padding: '10px 14px', borderRadius: '8px',
+                border: '1px solid var(--border)', background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)', fontSize: '13px',
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                resize: 'vertical', boxSizing: 'border-box', marginBottom: '18px',
+                outline: 'none',
+              }}
+            />
+ 
+            {/* Skill match hint — shown for rejected/shortlisted */}
+            {(statusModal.newStatus === 'rejected' || statusModal.newStatus === 'shortlisted') && (() => {
+              const app = applications.find(a => a._id === statusModal.appId);
+              const job = jobs.find(j => String(j._id) === String(app?.jobId));
+              if (!app || !job) return null;
+              const required = job.requiredSkills || [];
+              const has = app.skills || [];
+              const matched  = required.filter(s => has.map(x => x.toLowerCase()).includes(s.toLowerCase()));
+              const missing  = required.filter(s => !has.map(x => x.toLowerCase()).includes(s.toLowerCase()));
+              return (
+                <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '6px' }}>🎯 Skill Match for this job</div>
+                  {matched.length > 0 && (
+                    <div style={{ marginBottom: '4px' }}>
+                      <span style={{ color: '#16a34a', fontWeight: '600' }}>✅ Matched: </span>
+                      {matched.join(', ')}
+                    </div>
+                  )}
+                  {missing.length > 0 && (
+                    <div>
+                      <span style={{ color: '#dc2626', fontWeight: '600' }}>❌ Missing: </span>
+                      {missing.join(', ')}
+                    </div>
+                  )}
+                  {required.length === 0 && <span style={{ color: 'var(--text-muted)' }}>No required skills listed for this job.</span>}
+                </div>
+              );
+            })()}
+ 
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={async () => {
+                  try {
+                    await API.put(`/applications/${statusModal.appId}/status`, {
+                      status: statusModal.newStatus,
+                      statusReason: statusModal.reason.trim(),
+                    });
+                    setApplications(prev => prev.map(a =>
+                      a._id === statusModal.appId
+                        ? { ...a, status: statusModal.newStatus, statusReason: statusModal.reason.trim() }
+                        : a
+                    ));
+                    setSuccess(`Status updated to ${statusModal.newStatus}!`);
+                    setTimeout(() => setSuccess(''), 2500);
+                  } catch (err) {
+                    console.error(err);
+                  }
+                  setStatusModal({ open: false, appId: null, newStatus: '', reason: '' });
+                }}
+                className="btn-primary"
+                style={{ flex: 1, padding: '10px', fontSize: '14px', justifyContent: 'center' }}
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setStatusModal({ open: false, appId: null, newStatus: '', reason: '' })}
+                className="btn-secondary"
+                style={{ padding: '10px 18px', fontSize: '14px' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+ </> 
   );
 };
+
 
 export default AdminPanel;

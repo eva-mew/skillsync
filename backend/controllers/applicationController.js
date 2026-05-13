@@ -158,14 +158,14 @@ exports.getJobApplications = async (req, res) => {
 // ── Admin: update application status ─────────────────────────────────────────
 exports.updateStatus = async (req, res) => {
   try {
-    const { status, adminNote } = req.body;
+    const { status, statusReason, adminNote } = req.body;
     const validStatuses = ['pending', 'viewed', 'shortlisted', 'rejected', 'selected'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
     const app = await Application.findByIdAndUpdate(
       req.params.id,
-      { status, ...(adminNote !== undefined && { adminNote }) },
+      { status, statusReason, ...(adminNote !== undefined && { adminNote }) },
       { new: true }
     ).select('-cvData');
     if (!app) return res.status(404).json({ message: 'Application not found' });

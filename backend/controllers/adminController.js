@@ -77,6 +77,7 @@ const getMonthlyApplications = async (req, res) => {
           shortlisted: { $sum: { $cond: [{ $eq: ['$status', 'shortlisted'] }, 1, 0] } },
           rejected:    { $sum: { $cond: [{ $eq: ['$status', 'rejected']    }, 1, 0] } },
           pending:     { $sum: { $cond: [{ $eq: ['$status', 'pending']     }, 1, 0] } },
+          selected: { $sum: { $cond: [{ $eq: ['$status', 'selected'] }, 1, 0] } },
         }
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } }
@@ -86,7 +87,7 @@ const getMonthlyApplications = async (req, res) => {
       label: `${months[d._id.month - 1]} ${d._id.year}`,
       month: d._id.month, year: d._id.year,
       total: d.total, shortlisted: d.shortlisted,
-      rejected: d.rejected, pending: d.pending
+      rejected: d.rejected, pending: d.pending, selected: d.selected
     })));
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
