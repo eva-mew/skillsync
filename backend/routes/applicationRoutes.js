@@ -4,7 +4,7 @@ const multer = require('multer');
 const { protect } = require('../middleware/authMiddleware');
 const {
   applyJob, getUserApplications, getAllApplications,
-  getJobApplications, updateStatus, downloadCV
+  getJobApplications, updateStatus, downloadCV,deleteApplication
 } = require('../controllers/applicationController');
 
 // Multer setup — directly in routes
@@ -30,5 +30,5 @@ router.get('/cv/:id', protect, downloadCV);
 router.get('/all', protect, getAllApplications);
 router.get('/job/:jobId', protect, getJobApplications);
 router.put('/:id/status', protect, updateStatus);
-
+router.delete('/:id', protect, deleteApplication);
 module.exports = router;

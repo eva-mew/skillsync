@@ -8,7 +8,10 @@ const Startups = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({ budget: '', difficulty: '' });
+  
   const [mode, setMode] = useState('recommended');
+  const [compareList, setCompareList] = useState([]);
+const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
     fetchStartups();
@@ -112,10 +115,108 @@ const Startups = () => {
               <p>Try adjusting your filters</p>
             </div>
           ) : (
-            filtered.map(s => <StartupCard key={s._id} startup={s} />)
+            filtered.map(startup => (
+  <StartupCard
+    key={startup._id}
+    startup={startup}
+    onCompare={() => {
+      if (compareList.find(s => s._id === startup._id)) {
+        setCompareList(compareList.filter(s => s._id !== startup._id));
+      } else if (compareList.length < 2) {
+        setCompareList([...compareList, startup]);
+      }
+    }}
+    isInCompare={!!compareList.find(s => s._id === startup._id)}
+  />
+))
           )}
         </div>
       </div>
+      {/* Compare Bar */}
+{compareList.length > 0 && (
+  <div style={{
+    position: 'fixed', bottom: 0, left: 0, right: 0,
+    background: 'var(--surface)', borderTop: '2px solid var(--accent)',
+    padding: '12px 24px', display: 'flex', alignItems: 'center',
+    justifyContent: 'space-between', zIndex: 100,
+    boxShadow: '0 -4px 20px rgba(0,0,0,0.15)'
+  }}>
+    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+      <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+        ⚔️ Comparing {compareList.length}/2 startups
+      </span>
+      {compareList.map(s => (
+        <span key={s._id} style={{ padding: '4px 12px', background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: '100px', fontSize: '13px', fontWeight: '600' }}>
+          {s.title}
+        </span>
+      ))}
+    </div>
+    <div style={{ display: 'flex', gap: '8px' }}>
+      {compareList.length === 2 && (
+        <button onClick={() => setShowCompare(true)} className="btn-primary" style={{ padding: '8px 20px', fontSize: '13px' }}>
+          Compare Now →
+        </button>
+      )}
+      <button onClick={() => setCompareList([])} className="btn-secondary" style={{ padding: '8px 16px', fontSize: '13px' }}>
+        Clear
+      </button>
+    </div>
+  </div>
+)}
+
+{/* Startup Compare Modal */}
+{showCompare && compareList.length === 2 && (
+  <div style={{
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+    zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+  }}>
+    <div style={{
+      background: 'var(--surface)', borderRadius: '16px', width: '100%',
+      maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto',
+      boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+    }}>
+      <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>⚔️ Startup Comparison</h2>
+        <button onClick={() => setShowCompare(false)} style={{ background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
+      </div>
+      <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        {compareList.map((s, idx) => (
+          <div key={s._id} style={{ padding: '20px', background: 'var(--bg-secondary)', borderRadius: '12px', border: `2px solid ${idx === 0 ? 'var(--accent)' : 'var(--green)'}` }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '16px' }}>{s.title}</h3>
+            {[
+              { label: '📂 Category', value: s.category },
+              { label: '⚡ Difficulty', value: s.difficulty },
+              { label: '💰 Est. Cost', value: s.estimatedCost },
+              { label: '⏱️ Time to Launch', value: s.timeToLaunch },
+              { label: '💵 Revenue Potential', value: s.potentialRevenue },
+              { label: '💼 Budget', value: s.budget },
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: '13px' }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>{item.label}</span>
+                <span style={{ color: 'var(--text-primary)', fontWeight: '600', textTransform: 'capitalize' }}>{item.value || '—'}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: '12px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px' }}>VIABILITY SCORE</div>
+              <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${s.viabilityScore || 0}%`, background: 'var(--green)', borderRadius: '4px' }} />
+              </div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--green)', marginTop: '4px' }}>{s.viabilityScore || 0}%</div>
+            </div>
+            <div style={{ marginTop: '12px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px' }}>REQUIRED SKILLS</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {s.requiredSkills?.map((skill, i) => (
+                  <span key={i} className="skill-tag" style={{ fontSize: '11px' }}>{skill}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

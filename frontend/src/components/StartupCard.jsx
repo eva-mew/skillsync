@@ -7,7 +7,13 @@ const difficultyConfig = {
   advanced: { color: '#dc2626', bg: '#fef2f2', border: '#fecaca', label: '🔴 Advanced' }
 };
 
-const StartupCard = ({ startup, onSave, saved = false }) => {
+const StartupCard = ({
+  startup,
+  onSave,
+  saved = false,
+  onCompare,
+  isInCompare = false
+}) => {
   const [isSaved, setIsSaved] = useState(saved);
   const [saving, setSaving] = useState(false);
   const [showRoadmap, setShowRoadmap] = useState(false);
@@ -142,7 +148,21 @@ const StartupCard = ({ startup, onSave, saved = false }) => {
           <button onClick={handleShare} className="btn-ghost" style={{ color: copied ? 'var(--green)' : 'var(--text-muted)' }}>
             {copied ? '✅ Copied!' : '🔗 Share'}
           </button>
-
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    if (onCompare) onCompare();
+  }}
+  className="btn-ghost"
+  style={{
+    color: isInCompare ? 'var(--orange)' : 'var(--text-muted)',
+    background: isInCompare ? 'var(--orange-light)' : 'transparent',
+    fontSize: '12px',
+    padding: '5px 10px'
+  }}
+>
+  {isInCompare ? '⚔️ Added' : '⚔️ Compare'}
+</button>
           <div style={{ flex: 1 }} />
 
           <button

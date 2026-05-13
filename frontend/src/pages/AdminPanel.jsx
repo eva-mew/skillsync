@@ -787,6 +787,37 @@ const [dateSearched, setDateSearched] = useState(false);
                     <option value="selected">🏆 Selected</option>
                     <option value="rejected">❌ Rejected</option>
                   </select>
+                  <button
+  onClick={async () => {
+    if (!window.confirm('Delete this application permanently?')) return;
+
+    try {
+      await API.delete(`/applications/${app._id}`);
+
+      setApplications(prev =>
+        prev.filter(a => a._id !== app._id)
+      );
+
+      setSuccess('Application deleted!');
+      setTimeout(() => setSuccess(''), 2500);
+
+    } catch (err) {
+      console.error(err);
+    }
+  }}
+  style={{
+    padding:'5px 8px',
+    background:'#fef2f2',
+    color:'#dc2626',
+    border:'1px solid #fecaca',
+    borderRadius:'6px',
+    cursor:'pointer',
+    fontSize:'11px',
+    marginLeft:'6px'
+  }}
+>
+  🗑️
+</button>
                 </td>
               </tr>
             ))}

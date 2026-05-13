@@ -1,19 +1,21 @@
 const User = require('../models/User');
 
-// Calculate profile strength
-const calcProfileStrength = (user) => {
+// Profile strength calculation
+const calculateStrength = (user) => {
   let score = 0;
   if (user.name) score += 10;
   if (user.email) score += 10;
-  if (user.skills?.length > 0) score += 20;
-  if (user.skills?.length >= 3) score += 10;
+  if (user.skills && user.skills.length >= 5) score += 25;
+  else if (user.skills && user.skills.length >= 3) score += 15;
+  else if (user.skills && user.skills.length >= 1) score += 8;
   if (user.experience) score += 15;
-  if (user.interests?.length > 0) score += 15;
-  if (user.budget) score += 10;
-  if (user.workPreference) score += 10;
-  return score;
+  if (user.workPreference) score += 15;
+  if (user.location) score += 10;
+  if (user.interests && user.interests.length >= 2) score += 10;
+  else if (user.interests && user.interests.length >= 1) score += 5;
+  if (user.budget) score += 5;
+  return Math.min(score, 100);
 };
-
 // @route  GET /api/profile
 // @access Private
 const getProfile = async (req, res) => {
@@ -47,7 +49,7 @@ const updateProfile = async (req, res) => {
     if (workPreference) user.workPreference = workPreference;
 
     // Calculate profile strength
-    user.profileComplete = calcProfileStrength(user);
+    user.profileComplete = calculateStrength(user);
 
     const updatedUser = await user.save();
 
