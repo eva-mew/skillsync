@@ -802,64 +802,7 @@ const [dateSearched, setDateSearched] = useState(false);
   >🗑️</button>
 </td>
 
-                {/* Status dropdown */}
-                <td style={{ padding:'12px 16px' }}>
-                  <select
-                    value={app.status}
-                    onChange={async (e) => {
-                      try {
-                        await API.put(`/applications/${app._id}/status`, { status: e.target.value });
-                        setApplications(prev => prev.map(a =>
-                          a._id === app._id ? { ...a, status: e.target.value } : a
-                        ));
-                        setSuccess(`Status updated to ${e.target.value}!`);
-                        setTimeout(() => setSuccess(''), 2500);
-                      } catch (err) { console.error(err); }
-                    }}
-                    style={{
-                      padding:'5px 8px', borderRadius:'6px', border:'1px solid var(--border2)',
-                      background:'var(--surface)', color:'var(--text-primary)',
-                      fontSize:'12px', cursor:'pointer', fontFamily:'inherit', minWidth:'110px'
-                    }}
-                  >
-                    <option value="pending">🕐 Pending</option>
-                    <option value="viewed">👁️ Viewed</option>
-                    
-                    <option value="selected">🏆 Selected</option>
-                    <option value="rejected">❌ Rejected</option>
-                  </select>
-                  <button
-  onClick={async () => {
-    if (!window.confirm('Delete this application permanently?')) return;
-
-    try {
-      await API.delete(`/applications/${app._id}`);
-
-      setApplications(prev =>
-        prev.filter(a => a._id !== app._id)
-      );
-
-      setSuccess('Application deleted!');
-      setTimeout(() => setSuccess(''), 2500);
-
-    } catch (err) {
-      console.error(err);
-    }
-  }}
-  style={{
-    padding:'5px 8px',
-    background:'#fef2f2',
-    color:'#dc2626',
-    border:'1px solid #fecaca',
-    borderRadius:'6px',
-    cursor:'pointer',
-    fontSize:'11px',
-    marginLeft:'6px'
-  }}
->
-  🗑️
-</button>
-                </td>
+     
               </tr>
             ))}
           </tbody>

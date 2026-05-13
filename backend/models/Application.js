@@ -16,7 +16,7 @@ const ApplicationSchema = new mongoose.Schema({
   cvMimeType:     { type: String },
   // Status
   status: { type: String, default: 'pending' },
-statusReason: { type: String, default: '' },
+
   adminNote:  { type: String, default: '' },
   appliedAt:  { type: Date, default: Date.now },
   
