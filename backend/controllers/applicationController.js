@@ -24,8 +24,11 @@ exports.applyJob = async (req, res) => {
       });
     }
 
-    const userSkillsLower = user.skills.map(s => s.toLowerCase());
-    const jobSkillsLower = job.requiredSkills.map(s => s.toLowerCase());
+    const normalizeSkill = (skill) =>
+  skill.toLowerCase().replace(/[^a-z0-9+#.]/g, '').trim();
+
+const userSkillsLower = user.skills.map(normalizeSkill);
+const jobSkillsLower = job.requiredSkills.map(normalizeSkill);
     const matchedSkills = jobSkillsLower.filter(s => userSkillsLower.includes(s));
 
     if (matchedSkills.length === 0) {
