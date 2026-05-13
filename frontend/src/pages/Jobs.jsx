@@ -13,6 +13,13 @@ const Jobs = () => {
   const [mode, setMode] = useState('recommended');
   const [compareList, setCompareList] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
+  const [savedJobs, setSavedJobs] = useState([]);
+
+const handleSave = (jobId, savedStatus) => {
+  if (savedStatus) {
+    setSavedJobs(prev => [...prev, jobId]);
+  }
+};
 
   // eslint-disable-next-line
   useEffect(() => { fetchJobs(); }, [mode]);
