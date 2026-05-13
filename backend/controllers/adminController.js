@@ -2,7 +2,7 @@ const User = require('../models/User');
 const Job = require('../models/Job');
 const Startup = require('../models/Startup');
 const Application = require('../models/Application');
-
+const { sendJobPostedConfirmation } = require('../utils/emailService');
 // GET /api/admin/users
 const getUsers = async (req, res) => {
   try {
@@ -114,4 +114,58 @@ const getJobApplicants = async (req, res) => {
     res.json(apps);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
-module.exports = { getUsers, getStats, getJobReport, getUserReport, getMonthlyApplications, getApplicationsByDate, getJobApplicants };
+// POST /api/admin/jobs
+const postJob = async (req, res) => {
+  try {
+    const job = new Job({
+      ...req.body,
+      postedBy: req.user._id,
+      deadline: req.body.deadline || null,
+      isActive: true,
+    });
+
+    await job.save();
+
+    // Email to admin
+    await sendJobPostedConfirmation(
+      req.user.email,
+      job.title,
+      job.company
+    );
+
+    res.status(201).json(job);
+
+  } catch (err) {
+    res.status(500).json({
+      message: err.message
+    });
+  }
+};
+
+// PATCH /api/admin/jobs/:id/toggle
+const toggleJobStatus = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+
+    if (!job) {
+      return res.status(404).json({
+        message: 'Job not found'
+      });
+    }
+
+    job.isActive = !job.isActive;
+
+    await job.save();
+
+    res.json({
+      message: `Job ${job.isActive ? 'activated' : 'closed'}`,
+      job
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      message: err.message
+    });
+  }
+};
+module.exports = { getUsers, getStats, getJobReport, getUserReport, getMonthlyApplications, getApplicationsByDate, getJobApplicants, postJob, toggleJobStatus };

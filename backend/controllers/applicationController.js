@@ -2,7 +2,10 @@ const Application = require('../models/Application');
 const User = require('../models/User');
 const Job = require('../models/Job');
 
-
+const {
+  sendApplicationConfirmation,
+  sendStatusUpdate
+} = require('../utils/emailService');
 // ── Apply for a job ──────────────────────────────────────────────────────────
 exports.applyJob = async (req, res) => {
   try {
@@ -107,7 +110,13 @@ if (matchedSkills.length === 0) {
       cvMimeType: req.file.mimetype,
       status: 'pending'
     });
-
+// Send confirmation email
+await sendApplicationConfirmation(
+  user.email,
+  user.name,
+  job.title,
+  job.company
+);
     res.status(201).json({
       message: 'Application submitted successfully!',
       applicationId: application._id,
@@ -158,20 +167,56 @@ exports.getJobApplications = async (req, res) => {
 // ── Admin: update application status ─────────────────────────────────────────
 exports.updateStatus = async (req, res) => {
   try {
-    const { status,  adminNote } = req.body;
-    const validStatuses = ['pending', 'viewed', 'shortlisted', 'rejected', 'selected'];
+    const { status, adminNote } = req.body;
+
+    const validStatuses = [
+      'pending',
+      'viewed',
+      'shortlisted',
+      'rejected',
+      'selected'
+    ];
+
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
+      return res.status(400).json({
+        message: 'Invalid status'
+      });
     }
+
     const app = await Application.findByIdAndUpdate(
       req.params.id,
-      { status,  ...(adminNote !== undefined && { adminNote }) },
+      {
+        status,
+        ...(adminNote !== undefined && { adminNote })
+      },
       { new: true }
-    ).select('-cvData');
-    if (!app) return res.status(404).json({ message: 'Application not found' });
+    )
+      .populate('userId', 'name email')
+      .select('-cvData');
+
+    if (!app) {
+      return res.status(404).json({
+        message: 'Application not found'
+      });
+    }
+
+    // Send email notification
+    if (app.userId?.email) {
+      await sendStatusUpdate(
+        app.userId.email,
+        app.userId.name,
+        app.jobTitle,
+        app.company,
+        status
+      );
+    }
+
     res.json(app);
+
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message
+    });
   }
 };
 

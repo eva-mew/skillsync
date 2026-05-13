@@ -36,6 +36,8 @@ const JobSchema = new mongoose.Schema({
     ref: 'User'
   },
   isPremium: { type: Boolean, default: false },
+  deadline: { type: Date, default: null },
+isActive: { type: Boolean, default: true },
 companyLogo: { type: String, default: '' },
 companyDescription: { type: String, default: '' },
 companyWebsite: { type: String, default: '' },

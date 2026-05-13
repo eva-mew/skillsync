@@ -152,6 +152,46 @@ const handleApply = async () => {
         <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--green)', display: 'flex', alignItems: 'center', gap: '4px' }}>
           💰 ৳{job.salary}/mo
         </span>
+        {job.deadline && (
+  <>
+    <span style={{ color: 'var(--border2)' }}>·</span>
+
+    <span
+      style={{
+        fontSize: '12px',
+        color:
+          new Date(job.deadline) < new Date()
+            ? '#dc2626'
+            : '#d97706',
+        fontWeight: '600'
+      }}
+    >
+      📅 Deadline:{' '}
+      {new Date(job.deadline).toLocaleDateString('en-BD')}
+
+      {new Date(job.deadline) < new Date() && ' (Expired)'}
+    </span>
+  </>
+)}
+
+{!job.isActive && (
+  <>
+    <span style={{ color: 'var(--border2)' }}>·</span>
+
+    <span
+      style={{
+        padding: '2px 8px',
+        background: '#fef2f2',
+        color: '#dc2626',
+        borderRadius: '4px',
+        fontSize: '11px',
+        fontWeight: '600'
+      }}
+    >
+      🔒 Closed
+    </span>
+  </>
+)}
       </div>
 
       {/* SKILLS */}
@@ -223,24 +263,59 @@ const handleApply = async () => {
           {job.experience}
         </span>
 {/* Apply Button */}
-{job.locked ? (
+
+{!job.isActive ? (
+  <button
+    disabled
+    style={{
+      padding: '8px 18px',
+      borderRadius: '8px',
+      border: 'none',
+      background: '#e5e7eb',
+      color: '#6b7280',
+      fontSize: '13px',
+      fontWeight: '600'
+    }}
+  >
+    🔒 Job Closed
+  </button>
+
+) : job.locked ? (
+
   <button
     onClick={() => navigate('/premium')}
     style={{
-      padding: '8px 18px', borderRadius: '8px', border: 'none',
+      padding: '8px 18px',
+      borderRadius: '8px',
+      border: 'none',
       background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-      color: 'white', fontSize: '13px', fontWeight: '600',
-      cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif'
+      color: 'white',
+      fontSize: '13px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      fontFamily: 'Plus Jakarta Sans, sans-serif'
     }}
   >
     👑 Unlock Premium
   </button>
+
 ) : applied ? (
-  <button disabled className="btn-primary"
-    style={{ background: 'var(--green)', padding: '8px 18px', fontSize: '13px', opacity: 0.9 }}>
+
+  <button
+    disabled
+    className="btn-primary"
+    style={{
+      background: 'var(--green)',
+      padding: '8px 18px',
+      fontSize: '13px',
+      opacity: 0.9
+    }}
+  >
     ✅ Applied!
   </button>
+
 ) : (
+
   <button
     onClick={() => setShowApplyModal(true)}
     className="btn-primary"
@@ -248,6 +323,7 @@ const handleApply = async () => {
   >
     Apply Now →
   </button>
+
 )}
 
 {/* Apply Modal */}

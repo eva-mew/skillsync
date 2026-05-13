@@ -346,7 +346,18 @@ const [dateSearched, setDateSearched] = useState(false);
                       <input style={inputStyle} placeholder={f.ph} value={jobForm[f.key] || ''} onChange={e => setJobForm({ ...jobForm, [f.key]: e.target.value })} />
                     </div>
                   ))}
-
+<div>
+  <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+    Application Deadline (optional)
+  </label>
+  <input
+    type="date"
+    className="input"
+    value={jobForm.deadline || ''}
+    onChange={e => setJobForm({ ...jobForm, deadline: e.target.value })}
+    min={new Date().toISOString().split('T')[0]}
+  />
+</div>
                   <div>
                     <label style={labelStyle}>Job Type</label>
                     <select style={inputStyle} value={jobForm.type} onChange={e => setJobForm({ ...jobForm, type: e.target.value })}>
@@ -441,7 +452,38 @@ const [dateSearched, setDateSearched] = useState(false);
                               <button onClick={() => handleDeleteJob(job._id)} style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #fca5a5', background: '#fee2e2', color: '#dc2626', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
                                 🗑️
                               </button>
-                            </div>
+                               <button
+    onClick={async () => {
+      try {
+        const res = await API.patch(`/admin/jobs/${job._id}/toggle`);
+
+        setJobs(prev =>
+          prev.map(j =>
+            j._id === job._id
+              ? { ...j, isActive: res.data.job.isActive }
+              : j
+          )
+        );
+
+      } catch (err) {
+        console.error(err);
+      }
+    }}
+    style={{
+      padding: '5px 10px',
+      background: job.isActive ? '#fef2f2' : '#f0fdf4',
+      color: job.isActive ? '#dc2626' : '#16a34a',
+      border: `1px solid ${job.isActive ? '#fecaca' : '#bbf7d0'}`,
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '11px'
+    }}
+  >
+    {job.isActive ? '🔒 Close' : '✅ Open'}
+  </button>
+
+</div>
+                            
                           </td>
                         </tr>
                       );
