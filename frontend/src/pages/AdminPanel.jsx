@@ -712,13 +712,22 @@ const [dateSearched, setDateSearched] = useState(false);
                   </div>
                 </td>
 
-   {/* CV */}
+{/* CV */}
 <td style={{ padding:'12px 16px' }}>
   {app.cvFileName ? (
-    <a
-      href={`${process.env.REACT_APP_API_URL}/applications/cv/${app._id}`}
-      target="_blank"
-      rel="noreferrer"
+    <button
+      onClick={async () => {
+        try {
+          const res = await API.get(`/applications/cv/${app._id}`, {
+            responseType: 'blob'
+          });
+          const blob = new Blob([res.data], { type: res.headers['content-type'] });
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        } catch (err) {
+          alert('CV not found or access denied');
+        }
+      }}
       style={{
         padding:'5px 10px',
         background:'var(--accent-light)',
@@ -727,7 +736,7 @@ const [dateSearched, setDateSearched] = useState(false);
         borderRadius:'6px',
         fontSize:'12px',
         fontWeight:'600',
-        textDecoration:'none',
+        cursor:'pointer',
         display:'inline-flex',
         alignItems:'center',
         gap:'4px',
@@ -735,7 +744,7 @@ const [dateSearched, setDateSearched] = useState(false);
       }}
     >
       📄 View CV
-    </a>
+    </button>
   ) : (
     <span style={{ fontSize:'12px', color:'var(--text-muted)' }}>No CV</span>
   )}
