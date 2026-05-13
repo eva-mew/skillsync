@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import API from '../api';
 import { useNavigate } from 'react-router-dom';
+import ApplyModal from './ApplyModal';
+import { useAuth } from '../context/AuthContext';
 // Company logo color map
 const logoColors = {
   'A': '#2563eb', 'B': '#16a34a', 'C': '#dc2626', 'D': '#9333ea',
@@ -11,6 +13,9 @@ const logoColors = {
   'U': '#9333ea', 'V': '#ea580c', 'W': '#0891b2', 'X': '#65a30d',
   'Y': '#db2777', 'Z': '#7c3aed'
 };
+const { user } = useAuth();
+const [showApplyModal, setShowApplyModal] = useState(false);
+const [applied, setApplied] = useState(false);
 
 const getMatchClass = (score) => {
   if (score >= 80) return 'match-high';
@@ -207,9 +212,9 @@ const handleApply = async () => {
           {job.experience}
         </span>
 {/* Apply Button */}
-{job.locked || job.isPremium ? (
+{job.locked ? (
   <button
-    onClick={() => navigate(`/jobs/${job._id}`)}
+    onClick={() => navigate('/premium')}
     style={{
       padding: '8px 18px', borderRadius: '8px', border: 'none',
       background: 'linear-gradient(135deg, #f59e0b, #d97706)',
@@ -217,23 +222,34 @@ const handleApply = async () => {
       cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif'
     }}
   >
-    👑 View & Upgrade
+    👑 Unlock Premium
   </button>
 ) : applied ? (
-  <button className="btn-primary"
-    style={{ background: 'var(--green)', padding: '8px 18px', fontSize: '13px' }}
-    disabled
-  >
+  <button disabled className="btn-primary"
+    style={{ background: 'var(--green)', padding: '8px 18px', fontSize: '13px', opacity: 0.9 }}>
     ✅ Applied!
   </button>
 ) : (
   <button
-    onClick={handleApply}
+    onClick={() => setShowApplyModal(true)}
     className="btn-primary"
-    style={{ background: 'var(--accent)', padding: '8px 18px', fontSize: '13px' }}
+    style={{ padding: '8px 18px', fontSize: '13px' }}
   >
     Apply Now →
   </button>
+)}
+
+{/* Apply Modal */}
+{showApplyModal && (
+  <ApplyModal
+    job={job}
+    userSkills={user?.skills || []}
+    onClose={() => setShowApplyModal(false)}
+    onSuccess={() => {
+      setApplied(true);
+      setShowApplyModal(false);
+    }}
+  />
 )}
       </div>
     </div>

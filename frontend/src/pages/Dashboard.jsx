@@ -214,19 +214,22 @@ const Dashboard = () => {
                         {app.company} · Applied {new Date(app.appliedAt).toLocaleDateString()}
                       </div>
                     </div>
-                    <span style={{
-                      padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '600',
-                      background: app.status === 'shortlisted' ? 'var(--green-light)' :
-                                  app.status === 'rejected' ? '#fef2f2' :
-                                  app.status === 'viewed' ? 'var(--accent-light)' : 'var(--orange-light)',
-                      color: app.status === 'shortlisted' ? 'var(--green)' :
-                             app.status === 'rejected' ? '#dc2626' :
-                             app.status === 'viewed' ? 'var(--accent)' : 'var(--orange)',
-                    }}>
-                      {app.status === 'pending' ? '🕐 Pending' :
-                       app.status === 'viewed' ? '👁️ Viewed' :
-                       app.status === 'shortlisted' ? '⭐ Shortlisted' : '❌ Rejected'}
-                    </span>
+                   <span style={{
+  padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '600',
+  background: app.status === 'selected' ? '#1a7a3a' :
+              app.status === 'shortlisted' ? 'var(--green-light)' :
+              app.status === 'rejected' ? '#fef2f2' :
+              app.status === 'viewed' ? 'var(--accent-light)' : 'var(--orange-light)',
+  color: app.status === 'selected' ? 'white' :
+         app.status === 'shortlisted' ? 'var(--green)' :
+         app.status === 'rejected' ? '#dc2626' :
+         app.status === 'viewed' ? 'var(--accent)' : 'var(--orange)',
+}}>
+  {app.status === 'pending' ? '🕐 Pending' :
+   app.status === 'viewed' ? '👁️ Viewed' :
+   app.status === 'shortlisted' ? '⭐ Shortlisted' :
+   app.status === 'selected' ? '🏆 Selected!' : '❌ Rejected'}
+</span>
                   </div>
                 ))}
                 {applications.length > 5 && (

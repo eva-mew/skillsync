@@ -642,64 +642,151 @@ const [dateSearched, setDateSearched] = useState(false);
         )}
 
         {/* ══ APPLICATIONS TAB ══ */}
-        {activeTab === 'applications' && (
-          <div className="card" style={{ overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>📋 All Applications</h3>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                {['all', 'pending', 'viewed', 'shortlisted', 'rejected'].map(s => (
-                  <span key={s} style={{ padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '600', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
-                    {s}: {s === 'all' ? applications.length : applications.filter(a => a.status === s).length}
-                  </span>
-                ))}
-                <button onClick={downloadApplicationsCSV} className="btn-secondary" style={{ fontSize: '12px', padding: '6px 14px' }}>📥 CSV</button>
-              </div>
-            </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-                    {['#', 'Applicant', 'Email', 'Job Title', 'Company', 'Experience', 'Applied Date', 'Status'].map(h => (
-                      <th key={h} style={{ padding: '12px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+{activeTab === 'applications' && (
+  <div>
+    {success && (
+      <div style={{ background:'var(--green-light)', border:'1px solid var(--green-border)', color:'var(--green)', padding:'10px 16px', borderRadius:'8px', marginBottom:'16px', fontWeight:'600' }}>
+        ✅ {success}
+      </div>
+    )}
+    <div className="card" style={{ overflow:'hidden' }}>
+      <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <h3 style={{ fontSize:'16px', fontWeight:'700', color:'var(--text-primary)' }}>📋 All Job Applications</h3>
+        <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
+          <span className="badge badge-blue">{applications.length} total</span>
+          <button onClick={downloadApplicationsCSV} className="btn-secondary" style={{ fontSize:'13px', padding:'7px 16px' }}>
+            📥 Download CSV
+          </button>
+        </div>
+      </div>
+
+      <div style={{ overflowX:'auto' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+          <thead>
+            <tr style={{ background:'var(--bg-secondary)', borderBottom:'1px solid var(--border)' }}>
+              {['Applicant','Email','Job','Company','Match Score','Skills','CV','Status','Action'].map(h => (
+                <th key={h} style={{ padding:'12px 16px', textAlign:'left', fontSize:'12px', fontWeight:'600', color:'var(--text-muted)', textTransform:'uppercase', whiteSpace:'nowrap' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {applications.length === 0 ? (
+              <tr><td colSpan="9" style={{ padding:'40px', textAlign:'center', color:'var(--text-muted)' }}>No applications yet</td></tr>
+            ) : applications.map((app, i) => (
+              <tr key={app._id} style={{ borderBottom:'1px solid var(--border)', background: i%2===0 ? 'var(--surface)' : 'var(--surface2)' }}>
+
+                {/* Applicant */}
+                <td style={{ padding:'12px 16px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+                    <div style={{ width:'32px', height:'32px', borderRadius:'50%', background:'var(--accent)', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'13px', fontWeight:'700', flexShrink:0 }}>
+                      {app.applicantName?.charAt(0).toUpperCase()}
+                    </div>
+                    <span style={{ fontSize:'13px', fontWeight:'600', color:'var(--text-primary)', whiteSpace:'nowrap' }}>{app.applicantName}</span>
+                  </div>
+                </td>
+
+                <td style={{ padding:'12px 16px', fontSize:'13px', color:'var(--text-secondary)' }}>{app.applicantEmail}</td>
+                <td style={{ padding:'12px 16px', fontSize:'13px', fontWeight:'600', color:'var(--text-primary)', whiteSpace:'nowrap' }}>{app.jobTitle}</td>
+                <td style={{ padding:'12px 16px', fontSize:'13px', color:'var(--text-secondary)' }}>{app.company}</td>
+
+                {/* Match Score */}
+                <td style={{ padding:'12px 16px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+                    <div style={{ width:'50px', height:'6px', background:'var(--bg-tertiary)', borderRadius:'3px', overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${app.matchScore || 0}%`, background: app.matchScore >= 70 ? 'var(--green)' : app.matchScore >= 40 ? 'var(--orange)' : '#dc2626', borderRadius:'3px' }} />
+                    </div>
+                    <span style={{ fontSize:'12px', fontWeight:'700', color: app.matchScore >= 70 ? 'var(--green)' : app.matchScore >= 40 ? 'var(--orange)' : '#dc2626' }}>
+                      {app.matchScore || 0}%
+                    </span>
+                  </div>
+                </td>
+
+                {/* Skills */}
+                <td style={{ padding:'12px 16px' }}>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:'3px', maxWidth:'150px' }}>
+                    {app.skills?.slice(0,2).map((s,j) => (
+                      <span key={j} className="skill-tag" style={{ fontSize:'10px', padding:'1px 5px' }}>{s}</span>
                     ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {applications.map((app, i) => (
-                    <tr key={app._id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
-                      <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>{i + 1}</td>
-                      <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{app.applicantName}</td>
-                      <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{app.applicantEmail}</td>
-                      <td style={{ padding: '10px 14px', fontSize: '13px', color: 'var(--text-primary)' }}>{app.jobTitle}</td>
-                      <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{app.company}</td>
-                      <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{app.experience}</td>
-                      <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                        {new Date(app.appliedAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </td>
-                      <td style={{ padding: '10px 14px' }}>
-                        <select
-                          value={app.status}
-                          onChange={e => handleStatusChange(app._id, e.target.value)}
-                          style={{
-                            padding: '5px 10px', borderRadius: '6px', border: '1px solid var(--border)',
-                            background: app.status === 'shortlisted' ? '#d1fae5' : app.status === 'rejected' ? '#fee2e2' : app.status === 'viewed' ? '#dbeafe' : '#fef3c7',
-                            color: app.status === 'shortlisted' ? '#065f46' : app.status === 'rejected' ? '#991b1b' : app.status === 'viewed' ? '#1e40af' : '#92400e',
-                            fontSize: '12px', fontWeight: '700', cursor: 'pointer'
-                          }}
-                        >
-                          <option value="pending">🟡 Pending</option>
-                          <option value="viewed">🔵 Viewed</option>
-                          
-                          <option value="rejected">🔴 Rejected</option>
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+                    {app.skills?.length > 2 && <span className="badge badge-gray" style={{ fontSize:'10px' }}>+{app.skills.length-2}</span>}
+                  </div>
+                </td>
+
+                {/* CV */}
+                <td style={{ padding:'12px 16px' }}>
+                  {app.cvFileName ? (
+                    
+                      href={`${process.env.REACT_APP_API_URL}/applications/cv/${app._id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        padding:'5px 10px', background:'var(--accent-light)', color:'var(--accent)',
+                        border:'1px solid var(--accent-border)', borderRadius:'6px',
+                        fontSize:'12px', fontWeight:'600', textDecoration:'none',
+                        display:'inline-flex', alignItems:'center', gap:'4px', whiteSpace:'nowrap'
+                      }}
+                    >
+                      📄 View CV
+                    </a>
+                  ) : (
+                    <span style={{ fontSize:'12px', color:'var(--text-muted)' }}>No CV</span>
+                  )}
+                </td>
+
+                {/* Status badge */}
+                <td style={{ padding:'12px 16px' }}>
+                  <span style={{
+                    padding:'3px 10px', borderRadius:'100px', fontSize:'11px', fontWeight:'600',
+                    background: app.status === 'selected' ? '#1a7a3a' :
+                                app.status === 'shortlisted' ? 'var(--green-light)' :
+                                app.status === 'rejected' ? '#fef2f2' :
+                                app.status === 'viewed' ? 'var(--accent-light)' : 'var(--orange-light)',
+                    color: app.status === 'selected' ? 'white' :
+                           app.status === 'shortlisted' ? 'var(--green)' :
+                           app.status === 'rejected' ? '#dc2626' :
+                           app.status === 'viewed' ? 'var(--accent)' : 'var(--orange)',
+                  }}>
+                    {app.status === 'pending' ? '🕐 Pending' :
+                     app.status === 'viewed' ? '👁️ Viewed' :
+                     app.status === 'shortlisted' ? '⭐ Shortlisted' :
+                     app.status === 'selected' ? '🏆 Selected' : '❌ Rejected'}
+                  </span>
+                </td>
+
+                {/* Status dropdown */}
+                <td style={{ padding:'12px 16px' }}>
+                  <select
+                    value={app.status}
+                    onChange={async (e) => {
+                      try {
+                        await API.put(`/applications/${app._id}/status`, { status: e.target.value });
+                        setApplications(prev => prev.map(a =>
+                          a._id === app._id ? { ...a, status: e.target.value } : a
+                        ));
+                        setSuccess(`Status updated to ${e.target.value}!`);
+                        setTimeout(() => setSuccess(''), 2500);
+                      } catch (err) { console.error(err); }
+                    }}
+                    style={{
+                      padding:'5px 8px', borderRadius:'6px', border:'1px solid var(--border2)',
+                      background:'var(--surface)', color:'var(--text-primary)',
+                      fontSize:'12px', cursor:'pointer', fontFamily:'inherit', minWidth:'110px'
+                    }}
+                  >
+                    <option value="pending">🕐 Pending</option>
+                    <option value="viewed">👁️ Viewed</option>
+                    <option value="shortlisted">⭐ Shortlisted</option>
+                    <option value="selected">🏆 Selected</option>
+                    <option value="rejected">❌ Rejected</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+)}
 
        {/* ══ REPORTS TAB ══ */}
 {activeTab === 'reports' && (

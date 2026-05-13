@@ -1,31 +1,27 @@
 const mongoose = require('mongoose');
 
 const ApplicationSchema = new mongoose.Schema({
-  jobId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Job',
-    required: true
-  },
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  jobTitle: String,
-  company: String,
-  applicantName: String,
-  applicantEmail: String,
-  skills: [String],
-  experience: String,
+  userId:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  jobId:          { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true },
+  jobTitle:       { type: String },
+  company:        { type: String },
+  applicantName:  { type: String },
+  applicantEmail: { type: String },
+  skills:         [String],
+  experience:     { type: String },
+  matchScore:     { type: Number, default: 0 },
+  // CV upload
+  cvFileName:     { type: String },
+  cvData:         { type: Buffer },
+  cvMimeType:     { type: String },
+  // Status
   status: {
     type: String,
-    enum: ['pending', 'viewed', 'shortlisted', 'rejected'],
+    enum: ['pending', 'viewed', 'shortlisted', 'rejected', 'selected'],
     default: 'pending'
   },
-  appliedAt: {
-    type: Date,
-    default: Date.now
-  }
-}, { timestamps: true });
+  adminNote:  { type: String, default: '' },
+  appliedAt:  { type: Date, default: Date.now }
+});
 
 module.exports = mongoose.model('Application', ApplicationSchema);
