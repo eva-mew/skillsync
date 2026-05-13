@@ -19,12 +19,7 @@ const AdminPanel = () => {
   const [userReport, setUserReport] = useState([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
-  const [statusModal, setStatusModal] = useState({
-    open: false,
-    appId: null,
-    newStatus: '',
-    reason: '',
-  });
+ 
 
   // Forms
   const [showJobForm, setShowJobForm] = useState(false);
@@ -264,7 +259,7 @@ const [dateSearched, setDateSearched] = useState(false);
   );
 
   return (
-    <>
+    
     <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)' }}>
       <Navbar />
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '28px 20px' }}>
@@ -757,61 +752,55 @@ const [dateSearched, setDateSearched] = useState(false);
   )}
 </td>
 
-                {/* Status badge + reason */}
-                <td style={{ padding: '12px 16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{
-                      padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: '600', display: 'inline-block',
-                      background: app.status === 'selected'    ? '#1a7a3a' :
-                                  app.status === 'shortlisted' ? 'var(--green-light)' :
-                                  app.status === 'rejected'    ? '#fef2f2' :
-                                  app.status === 'viewed'      ? 'var(--accent-light)' : 'var(--orange-light)',
-                      color:      app.status === 'selected'    ? 'white' :
-                                  app.status === 'shortlisted' ? 'var(--green)' :
-                                  app.status === 'rejected'    ? '#dc2626' :
-                                  app.status === 'viewed'      ? 'var(--accent)' : 'var(--orange)',
-                    }}>
-                      {app.status === 'pending'     ? '🕐 Pending'     :
-                       app.status === 'viewed'      ? '👁️ Viewed'      :
-                       app.status === 'shortlisted' ? '⭐ Shortlisted' :
-                       app.status === 'selected'    ? '🏆 Selected'    : '❌ Rejected'}
-                    </span>
-                    {app.statusReason && (
-                      <span style={{
-                        fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic',
-                        maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        display: 'block',
-                      }} title={app.statusReason}>
-                        💬 {app.statusReason}
-                      </span>
-                    )}
-                  </div>
-                </td>
- 
-// ---- ACTION CELL — replace the
-                  <select
-                    value={app.status}
-                    onChange={(e) => {
-                      // Open modal — don't call API yet
-                      setStatusModal({
-                        open: true,
-                        appId: app._id,
-                        newStatus: e.target.value,
-                        reason: '',
-                      });
-                    }}
-                    style={{
-                      padding: '5px 8px', borderRadius: '6px', border: '1px solid var(--border2)',
-                      background: 'var(--surface)', color: 'var(--text-primary)',
-                      fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', minWidth: '110px'
-                    }}
-                  >
-                    <option value="pending">🕐 Pending</option>
-                    <option value="viewed">👁️ Viewed</option>
-                    <option value="shortlisted">⭐ Shortlisted</option>
-                    <option value="selected">🏆 Selected</option>
-                    <option value="rejected">❌ Rejected</option>
-                  </select>
+   {/* Status */}
+<td style={{ padding:'12px 16px' }}>
+  <span style={{
+    padding:'3px 10px', borderRadius:'100px', fontSize:'11px', fontWeight:'600', display:'inline-block',
+    background: app.status==='selected' ? '#1a7a3a' : app.status==='rejected' ? '#fef2f2' : app.status==='viewed' ? 'var(--accent-light)' : 'var(--orange-light)',
+    color: app.status==='selected' ? 'white' : app.status==='rejected' ? '#dc2626' : app.status==='viewed' ? 'var(--accent)' : 'var(--orange)',
+  }}>
+    {app.status==='pending' ? '🕐 Pending' : app.status==='viewed' ? '👁️ Viewed' : app.status==='selected' ? '🏆 Selected' : '❌ Rejected'}
+  </span>
+</td>
+
+{/* Action */}
+<td style={{ padding:'12px 16px' }}>
+  <select
+    value={app.status}
+    onChange={async (e) => {
+      try {
+        await API.put(`/applications/${app._id}/status`, { status: e.target.value });
+        setApplications(prev => prev.map(a =>
+          a._id === app._id ? { ...a, status: e.target.value } : a
+        ));
+        setSuccess(`Status updated to ${e.target.value}!`);
+        setTimeout(() => setSuccess(''), 2500);
+      } catch (err) { console.error(err); }
+    }}
+    style={{
+      padding:'5px 8px', borderRadius:'6px', border:'1px solid var(--border2)',
+      background:'var(--surface)', color:'var(--text-primary)',
+      fontSize:'12px', cursor:'pointer', fontFamily:'inherit', minWidth:'110px'
+    }}
+  >
+    <option value="pending">🕐 Pending</option>
+    <option value="viewed">👁️ Viewed</option>
+    <option value="selected">🏆 Selected</option>
+    <option value="rejected">❌ Rejected</option>
+  </select>
+  <button
+    onClick={async () => {
+      if (!window.confirm('Delete this application permanently?')) return;
+      try {
+        await API.delete(`/applications/${app._id}`);
+        setApplications(prev => prev.filter(a => a._id !== app._id));
+        setSuccess('Application deleted!');
+        setTimeout(() => setSuccess(''), 2500);
+      } catch (err) { console.error(err); }
+    }}
+    style={{ padding:'5px 8px', background:'#fef2f2', color:'#dc2626', border:'1px solid #fecaca', borderRadius:'6px', cursor:'pointer', fontSize:'11px', marginLeft:'6px' }}
+  >🗑️</button>
+</td>
 
                 {/* Status dropdown */}
                 <td style={{ padding:'12px 16px' }}>
@@ -835,7 +824,7 @@ const [dateSearched, setDateSearched] = useState(false);
                   >
                     <option value="pending">🕐 Pending</option>
                     <option value="viewed">👁️ Viewed</option>
-                    <option value="shortlisted">⭐ Shortlisted</option>
+                    
                     <option value="selected">🏆 Selected</option>
                     <option value="rejected">❌ Rejected</option>
                   </select>
@@ -1366,126 +1355,8 @@ const [dateSearched, setDateSearched] = useState(false);
 
       </div>
     </div>
-     {/* ══ STATUS REASON MODAL ══ */}
-      {statusModal.open && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
-        }}>
-          <div style={{
-            background: 'var(--surface)', borderRadius: '16px', padding: '28px',
-            width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
-            border: '1px solid var(--border)',
-          }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '22px' }}>
-                {statusModal.newStatus === 'selected'    ? '🏆' :
-                 statusModal.newStatus === 'shortlisted' ? '⭐' :
-                 statusModal.newStatus === 'rejected'    ? '❌' :
-                 statusModal.newStatus === 'viewed'      ? '👁️' : '🕐'}
-              </span>
-              <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, textTransform: 'capitalize' }}>
-                Mark as {statusModal.newStatus}
-              </h3>
-            </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '18px' }}>
-              {statusModal.newStatus === 'selected'    ? 'Congratulations! Why is this candidate being selected?' :
-               statusModal.newStatus === 'shortlisted' ? 'What made this candidate stand out?' :
-               statusModal.newStatus === 'rejected'    ? 'Please note why this application is being rejected.' :
-               statusModal.newStatus === 'viewed'      ? 'Add an optional note about this application.' :
-               'Add an optional note.'}
-            </p>
+   
  
-            {/* Reason textarea */}
-            <textarea
-              autoFocus
-              placeholder={
-                statusModal.newStatus === 'selected'    ? 'e.g. Strong React skills, great culture fit, passed technical round.' :
-                statusModal.newStatus === 'shortlisted' ? 'e.g. Good skill match, invite for interview.' :
-                statusModal.newStatus === 'rejected'    ? 'e.g. Does not meet minimum experience requirement.' :
-                'Optional note...'
-              }
-              value={statusModal.reason}
-              onChange={e => setStatusModal(prev => ({ ...prev, reason: e.target.value }))}
-              rows={3}
-              style={{
-                width: '100%', padding: '10px 14px', borderRadius: '8px',
-                border: '1px solid var(--border)', background: 'var(--bg-secondary)',
-                color: 'var(--text-primary)', fontSize: '13px',
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
-                resize: 'vertical', boxSizing: 'border-box', marginBottom: '18px',
-                outline: 'none',
-              }}
-            />
- 
-            {/* Skill match hint — shown for rejected/shortlisted */}
-            {(statusModal.newStatus === 'rejected' || statusModal.newStatus === 'shortlisted') && (() => {
-              const app = applications.find(a => a._id === statusModal.appId);
-              const job = jobs.find(j => String(j._id) === String(app?.jobId));
-              if (!app || !job) return null;
-              const required = job.requiredSkills || [];
-              const has = app.skills || [];
-              const matched  = required.filter(s => has.map(x => x.toLowerCase()).includes(s.toLowerCase()));
-              const missing  = required.filter(s => !has.map(x => x.toLowerCase()).includes(s.toLowerCase()));
-              return (
-                <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px' }}>
-                  <div style={{ fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '6px' }}>🎯 Skill Match for this job</div>
-                  {matched.length > 0 && (
-                    <div style={{ marginBottom: '4px' }}>
-                      <span style={{ color: '#16a34a', fontWeight: '600' }}>✅ Matched: </span>
-                      {matched.join(', ')}
-                    </div>
-                  )}
-                  {missing.length > 0 && (
-                    <div>
-                      <span style={{ color: '#dc2626', fontWeight: '600' }}>❌ Missing: </span>
-                      {missing.join(', ')}
-                    </div>
-                  )}
-                  {required.length === 0 && <span style={{ color: 'var(--text-muted)' }}>No required skills listed for this job.</span>}
-                </div>
-              );
-            })()}
- 
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={async () => {
-                  try {
-                    await API.put(`/applications/${statusModal.appId}/status`, {
-                      status: statusModal.newStatus,
-                      statusReason: statusModal.reason.trim(),
-                    });
-                    setApplications(prev => prev.map(a =>
-                      a._id === statusModal.appId
-                        ? { ...a, status: statusModal.newStatus, statusReason: statusModal.reason.trim() }
-                        : a
-                    ));
-                    setSuccess(`Status updated to ${statusModal.newStatus}!`);
-                    setTimeout(() => setSuccess(''), 2500);
-                  } catch (err) {
-                    console.error(err);
-                  }
-                  setStatusModal({ open: false, appId: null, newStatus: '', reason: '' });
-                }}
-                className="btn-primary"
-                style={{ flex: 1, padding: '10px', fontSize: '14px', justifyContent: 'center' }}
-              >
-                Confirm
-              </button>
-              <button
-                onClick={() => setStatusModal({ open: false, appId: null, newStatus: '', reason: '' })}
-                className="btn-secondary"
-                style={{ padding: '10px 18px', fontSize: '14px' }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
- </> 
   );
 };
 
