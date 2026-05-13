@@ -711,7 +711,7 @@ const [dateSearched, setDateSearched] = useState(false);
                   </div>
                 </td>
 
-  {/* CV */}
+   {/* CV */}Expand comment
 <td style={{ padding:'12px 16px' }}>
   {app.cvFileName ? (
     <a
