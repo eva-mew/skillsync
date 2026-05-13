@@ -13,9 +13,7 @@ const logoColors = {
   'U': '#9333ea', 'V': '#ea580c', 'W': '#0891b2', 'X': '#65a30d',
   'Y': '#db2777', 'Z': '#7c3aed'
 };
-const { user } = useAuth();
-const [showApplyModal, setShowApplyModal] = useState(false);
-const [applied, setApplied] = useState(false);
+
 
 const getMatchClass = (score) => {
   if (score >= 80) return 'match-high';
@@ -31,9 +29,12 @@ const getMatchLabel = (score) => {
 
 const JobCard = ({ job, onSave, saved = false, onCompare, isInCompare = false }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+const [showApplyModal, setShowApplyModal] = useState(false);
+const [applied, setApplied] = useState(false);
   const [isSaved, setIsSaved] = useState(saved);
   const [saving, setSaving] = useState(false);
-  const [applied, setApplied] = useState(false);
+  
   const [copied, setCopied] = useState(false);
 
   const firstLetter = job.company?.charAt(0).toUpperCase() || 'C';
