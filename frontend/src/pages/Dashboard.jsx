@@ -119,7 +119,7 @@ const Dashboard = () => {
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   style={{
-                    padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                    padding: '8px 16px', borderRadius: '8px',  cursor: 'pointer',
                     background: activeTab === tab.key ? 'var(--accent)' : 'var(--surface)',
                     color: activeTab === tab.key ? 'white' : 'var(--text-secondary)',
                     fontWeight: '600', fontSize: '13px', fontFamily: 'inherit',
