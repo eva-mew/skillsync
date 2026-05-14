@@ -192,6 +192,88 @@ const handleSubscribe = async () => {
     </div>
   </div>
 </div>
+{/* PREMIUM AD BANNER */}
+<div style={{
+  background: 'linear-gradient(135deg, #1a7a3a, #0f4d25)',
+  padding: '20px 24px',
+  textAlign: 'center',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '20px',
+  flexWrap: 'wrap',
+  borderTop: '1px solid rgba(255,255,255,0.06)',
+  borderBottom: '1px solid rgba(255,255,255,0.06)',
+  boxShadow: '0 6px 20px rgba(0,0,0,0.15)'
+}}>
+
+  <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  }}>
+
+    <div style={{
+      width: '48px',
+      height: '48px',
+      borderRadius: '14px',
+      background: 'rgba(255,255,255,0.12)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '24px'
+    }}>
+      👑
+    </div>
+
+    <div style={{ textAlign: 'left' }}>
+
+      <div style={{
+        color: '#fbbf24',
+        fontSize: '11px',
+        fontWeight: '800',
+        letterSpacing: '1.5px',
+        textTransform: 'uppercase',
+        marginBottom: '2px'
+      }}>
+        SkillSync Pro
+      </div>
+
+      <div style={{
+        color: 'white',
+        fontSize: '15px',
+        fontWeight: '700',
+        lineHeight: '1.5'
+      }}>
+        Get hired faster and smarter — plans start at just ৳299/month
+      </div>
+
+    </div>
+  </div>
+
+  <button
+    onClick={() => navigate('/premium')}
+    style={{
+      padding: '11px 24px',
+      borderRadius: '10px',
+      background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+      color: '#1a1a1a',
+      border: 'none',
+      fontWeight: '800',
+      fontSize: '14px',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      whiteSpace: 'nowrap',
+      boxShadow: '0 4px 14px rgba(251,191,36,0.35)',
+      transition: 'transform 0.15s ease'
+    }}
+    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0px)'}
+  >
+    🚀 Subscribe Now →
+  </button>
+
+</div>
 
      {/* STATS */}
 <div ref={statsRef} style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>

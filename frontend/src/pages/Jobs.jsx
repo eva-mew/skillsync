@@ -3,7 +3,8 @@ import Navbar from '../components/Navbar';
 import JobCard from '../components/JobCard';
 import CompareModal from '../components/CompareModal';
 import API from '../api';
-
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,8 @@ const Jobs = () => {
   const [compareList, setCompareList] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
   const [savedJobs, setSavedJobs] = useState([]);
-
+const navigate = useNavigate();
+const { user } = useAuth();
 const handleSave = (jobId, savedStatus) => {
   if (savedStatus) {
     setSavedJobs(prev => [...prev, jobId]);
@@ -117,8 +119,16 @@ useEffect(() => {
         </div>
       )}
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '28px 24px', display: 'grid', gridTemplateColumns: '240px 1fr', gap: '24px' }}
-  className="page-grid">
+    {/* MAIN 3-COLUMN LAYOUT */}
+<div style={{ 
+  display: 'grid',
+  gridTemplateColumns: '260px 1fr 280px',
+  gap: '20px',
+  maxWidth: '1300px',
+  margin: '0 auto',
+  padding: '24px 20px',
+  alignItems: 'start'
+}} className="page-grid">
 
         {/* SIDEBAR */}
         <div className="sidebar-col">
@@ -230,6 +240,178 @@ useEffect(() => {
             ))
           )}
         </div>
+
+        {/* RIGHT — New Sidebar */}
+<div
+  className="jobs-right-sidebar"
+  style={{ 
+    position: 'sticky', 
+  top: '84px', 
+  display: 'flex', 
+  flexDirection: 'column', 
+  gap: '16px' 
+}}>
+
+  {/* PREMIUM AD CARD */}
+  {!user?.isPremium && (
+    <div style={{
+      background: 'linear-gradient(135deg, #1a7a3a 0%, #0f4d25 50%, #1d4ed8 100%)',
+      borderRadius: '16px',
+      padding: '24px',
+      color: 'white',
+      boxShadow: '0 8px 32px rgba(26,122,58,0.35)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+
+      <div style={{
+        position: 'absolute',
+        top: '-20px',
+        right: '-20px',
+        width: '100px',
+        height: '100px',
+        background: 'rgba(255,255,255,0.08)',
+        borderRadius: '50%'
+      }} />
+
+      <div style={{
+        position: 'absolute',
+        bottom: '-30px',
+        left: '-10px',
+        width: '80px',
+        height: '80px',
+        background: 'rgba(255,255,255,0.06)',
+        borderRadius: '50%'
+      }} />
+
+      <div style={{ fontSize: '32px', marginBottom: '10px' }}>👑</div>
+
+      <div style={{
+        fontSize: '11px',
+        fontWeight: '700',
+        letterSpacing: '2px',
+        textTransform: 'uppercase',
+        color: '#fbbf24',
+        marginBottom: '6px'
+      }}>
+        SkillSync Pro
+      </div>
+
+      <h3 style={{
+        fontSize: '18px',
+        fontWeight: '800',
+        marginBottom: '8px',
+        lineHeight: '1.3'
+      }}>
+        Unlock Exclusive Jobs!
+      </h3>
+
+      <p style={{
+        fontSize: '12px',
+        color: 'rgba(255,255,255,0.8)',
+        marginBottom: '16px',
+        lineHeight: '1.6'
+      }}>
+        Get access to premium job listings, priority applications and career insights.
+      </p>
+
+      {[
+        '✅ Premium exclusive jobs',
+        '✅ Priority application',
+        '✅ Company profiles',
+        '✅ Invoice download',
+      ].map((f, i) => (
+        <div
+          key={i}
+          style={{
+            fontSize: '12px',
+            color: 'rgba(255,255,255,0.9)',
+            marginBottom: '6px'
+          }}
+        >
+          {f}
+        </div>
+      ))}
+
+      <div style={{
+        marginTop: '16px',
+        padding: '8px 0',
+        borderTop: '1px solid rgba(255,255,255,0.2)',
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: '4px',
+        marginBottom: '14px'
+      }}>
+        <span style={{ fontSize: '28px', fontWeight: '800' }}>৳299</span>
+        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
+          /month
+        </span>
+      </div>
+
+      <button
+        onClick={() => navigate('/premium')}
+        style={{
+          width: '100%',
+          padding: '11px',
+          borderRadius: '10px',
+          background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+          color: '#1a1a1a',
+          border: 'none',
+          fontWeight: '800',
+          fontSize: '14px',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          boxShadow: '0 4px 12px rgba(251,191,36,0.4)'
+        }}
+      >
+        🚀 Upgrade to Pro →
+      </button>
+
+      <p style={{
+        fontSize: '10px',
+        color: 'rgba(255,255,255,0.5)',
+        textAlign: 'center',
+        marginTop: '8px'
+      }}>
+        🔒 Secured by SSLCommerz
+      </p>
+    </div>
+  )}
+
+  {/* PREMIUM ACTIVE */}
+  {user?.isPremium && (
+    <div style={{
+      background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+      borderRadius: '16px',
+      padding: '20px',
+      color: 'white',
+      textAlign: 'center'
+    }}>
+      <div style={{ fontSize: '36px', marginBottom: '8px' }}>👑</div>
+
+      <div style={{
+        fontWeight: '800',
+        fontSize: '16px',
+        marginBottom: '4px'
+      }}>
+        Premium Active!
+      </div>
+
+      <div style={{
+        fontSize: '11px',
+        color: 'rgba(255,255,255,0.85)'
+      }}>
+        Valid until{' '}
+        {new Date(user.premiumExpiresAt).toLocaleDateString('en-BD', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        })}
+      </div>
+    </div>
+  )}
+
+</div>
       </div>
 
       {/* Compare Modal */}
