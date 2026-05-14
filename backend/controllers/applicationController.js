@@ -143,7 +143,8 @@ exports.getUserApplications = async (req, res) => {
 exports.getAllApplications = async (req, res) => {
   try {
     const apps = await Application.find()
-      .select('-cvData') // don't send binary in list
+      .select('-cvData')
+      .populate('userId', 'name email') 
       .sort({ matchScore: -1, appliedAt: -1 });
     res.json(apps);
   } catch (err) {
