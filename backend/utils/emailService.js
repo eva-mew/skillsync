@@ -1,5 +1,5 @@
 const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 'dummy_key');
 
 exports.sendApplicationConfirmation = async (userEmail, userName, jobTitle, company) => {
   try {
