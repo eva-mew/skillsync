@@ -145,7 +145,7 @@ exports.getAllApplications = async (req, res) => {
     const apps = await Application.find()
       .select('-cvData')
       .populate('userId', 'name email') 
-      .sort({ matchScore: -1, appliedAt: -1 });
+      .sort({ appliedAt: -1 });
     res.json(apps);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -157,7 +157,7 @@ exports.getJobApplications = async (req, res) => {
   try {
     const apps = await Application.find({ jobId: req.params.jobId })
       .select('-cvData')
-      .sort({ matchScore: -1 });
+      .sort({ appliedAt: -1 });
     res.json(apps);
   } catch (err) {
     res.status(500).json({ message: err.message });

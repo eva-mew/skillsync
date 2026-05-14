@@ -73,30 +73,39 @@ console.log('MATCHED:', matchedSkills);
     handleFile(e.dataTransfer.files[0]);
   };
 
-  const handleSubmit = async () => {
-    if (!canApply) {
-      setError('You need at least 1 matching skill to apply.');
-      return;
-    }
-    if (!cvFile) {
-      setError('Please upload your CV before applying.');
-      return;
-    }
-    setApplying(true);
-    setError('');
-    try {
-      const formData = new FormData();
-      formData.append('jobId', job._id);
-      formData.append('cv', cvFile);
-      await API.post('/applications', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      onSuccess();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Application failed. Try again.');
-    }
-    setApplying(false);
-  };
+ const handleSubmit = async () => {
+  // Deadline check
+  if (job.deadline && new Date(job.deadline) < new Date()) {
+    setError('This job application deadline has passed.');
+    return;
+  }
+  if (!job.isActive) {
+    setError('This job is no longer accepting applications.');
+    return;
+  }
+  if (!canApply) {
+    setError('You need at least 1 matching skill to apply.');
+    return;
+  }
+  if (!cvFile) {
+    setError('Please upload your CV before applying.');
+    return;
+  }
+  setApplying(true);
+  setError('');
+  try {
+    const formData = new FormData();
+    formData.append('jobId', job._id);
+    formData.append('cv', cvFile);
+    await API.post('/applications', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    onSuccess();
+  } catch (err) {
+    setError(err.response?.data?.message || 'Application failed. Try again.');
+  }
+  setApplying(false);
+};
 
   return (
     <div style={{
