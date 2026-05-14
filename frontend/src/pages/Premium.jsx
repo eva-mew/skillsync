@@ -6,7 +6,7 @@ import API from '../api';
 
 const Premium = () => {
   // eslint-disable-next-line no-unused-vars
-  const { user } = useAuth();
+  const { user ,login } = useAuth();
   // eslint-disable-next-line no-unused-vars
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -27,16 +27,30 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
-  const fetchStatus = async () => {
-    try {
-      const [statusRes, paymentsRes] = await Promise.all([
-        API.get('/payment/status'),
-        API.get('/payment/my')
-      ]);
-      setPremiumStatus(statusRes.data);
-      setPayments(paymentsRes.data);
-    } catch (err) { console.error(err); }
-  };
+ const fetchStatus = async () => {
+  try {
+    const [statusRes, paymentsRes] = await Promise.all([
+      API.get('/payment/status'),
+      API.get('/payment/my')
+    ]);
+    setPremiumStatus(statusRes.data);
+    setPayments(paymentsRes.data);
+
+    // KEY FIX: sync AuthContext if backend says premium but local state doesn't
+    if (statusRes.data.isPremium && !user?.isPremium) {
+      login(
+        {
+          ...user,
+          isPremium: true,
+          premiumExpiresAt: statusRes.data.premiumExpiresAt
+        },
+        user?.token
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const handleSubscribe = async () => {
     setLoading(true);

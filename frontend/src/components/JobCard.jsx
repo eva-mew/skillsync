@@ -265,65 +265,33 @@ const handleApply = async () => {
 {/* Apply Button */}
 
 {!job.isActive ? (
-  <button
-    disabled
-    style={{
-      padding: '8px 18px',
-      borderRadius: '8px',
-      border: 'none',
-      background: '#e5e7eb',
-      color: '#6b7280',
-      fontSize: '13px',
-      fontWeight: '600'
-    }}
-  >
+  <button disabled style={{ padding: '8px 18px', borderRadius: '8px', border: 'none',
+    background: '#e5e7eb', color: '#6b7280', fontSize: '13px', fontWeight: '600' }}>
     🔒 Job Closed
   </button>
 
-) : job.locked ? (
-
+) : (job.isPremium && !user?.isPremium) ? (
   <button
     onClick={() => navigate('/premium')}
-    style={{
-      padding: '8px 18px',
-      borderRadius: '8px',
-      border: 'none',
+    style={{ padding: '8px 18px', borderRadius: '8px', border: 'none',
       background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-      color: 'white',
-      fontSize: '13px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      fontFamily: 'Plus Jakarta Sans, sans-serif'
-    }}
+      color: 'white', fontSize: '13px', fontWeight: '600',
+      cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
   >
     👑 Unlock Premium
   </button>
 
 ) : applied ? (
-
-  <button
-    disabled
-    className="btn-primary"
-    style={{
-      background: 'var(--green)',
-      padding: '8px 18px',
-      fontSize: '13px',
-      opacity: 0.9
-    }}
-  >
+  <button disabled className="btn-primary"
+    style={{ background: 'var(--green)', padding: '8px 18px', fontSize: '13px', opacity: 0.9 }}>
     ✅ Applied!
   </button>
 
 ) : (
-
-  <button
-    onClick={() => setShowApplyModal(true)}
-    className="btn-primary"
-    style={{ padding: '8px 18px', fontSize: '13px' }}
-  >
+  <button onClick={() => setShowApplyModal(true)} className="btn-primary"
+    style={{ padding: '8px 18px', fontSize: '13px' }}>
     Apply Now →
   </button>
-
 )}
 
 {/* Apply Modal */}
