@@ -27,7 +27,10 @@ router.get('/my', protect, getUserApplications);
 router.get('/cv/:id', protect, downloadCV);
 
 // Admin routes
-router.get('/test', (req, res) => res.json({ message: 'Application routes working!' }));
+
+router.post('/', protect, upload.single('cv'), applyJob);
+router.get('/my', protect, getUserApplications);
+router.get('/cv/:id', protect, downloadCV);
 router.get('/all', protect, getAllApplications);
 router.get('/job/:jobId', protect, getJobApplications);
 router.put('/:id/status', protect, adminOnly, updateStatus);
