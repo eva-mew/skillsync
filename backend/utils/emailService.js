@@ -2,8 +2,8 @@ const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
   host: 'smtp-relay.brevo.com',
-  port: 587,
-  secure: false,
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 exports.sendApplicationConfirmation = async (userEmail, userName, jobTitle, company) => {
   try {
     await transporter.sendMail({
-      from: '"SkillSync" <sabiramahbubaevapeu@gmail.com>',
+      from: '"SkillSync" <ab4508001@smtp-brevo.com>',
       to: userEmail,
       subject: `✅ Application Submitted — ${jobTitle} at ${company}`,
       html: `<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
@@ -34,7 +34,7 @@ exports.sendStatusUpdate = async (userEmail, userName, jobTitle, company, newSta
   const statusColors = { viewed:'#2563eb', shortlisted:'#16a34a', rejected:'#dc2626', pending:'#d97706', selected:'#1a7a3a' };
   try {
     await transporter.sendMail({
-      from: '"SkillSync" <sabiramahbubaevapeu@gmail.com>',
+      from: '"SkillSync" <ab4508001@smtp-brevo.com>',
       to: userEmail,
       subject: `${statusEmoji[newStatus] || '📢'} Application Update — ${jobTitle}`,
       html: `<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
@@ -55,7 +55,7 @@ exports.sendStatusUpdate = async (userEmail, userName, jobTitle, company, newSta
 exports.sendJobPostedConfirmation = async (adminEmail, jobTitle, company) => {
   try {
     await transporter.sendMail({
-      from: '"SkillSync" <sabiramahbubaevapeu@gmail.com>',
+      from: '"SkillSync" <ab4508001@smtp-brevo.com>',
       to: adminEmail,
       subject: `✅ Job Posted — ${jobTitle} at ${company}`,
       html: `<p><strong>${jobTitle}</strong> at <strong>${company}</strong> is now live on SkillSync.</p>`
