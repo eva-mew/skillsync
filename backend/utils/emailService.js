@@ -1,6 +1,8 @@
 require('dotenv').config(); 
 const nodemailer = require('nodemailer');
-
+console.log('EMAIL SERVICE LOADED');
+console.log('EMAIL_USER:', process.env.EMAIL_USER);
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '✅ Set' : '❌ NOT SET');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -37,6 +39,8 @@ exports.sendApplicationConfirmation = async (userEmail, userName, jobTitle, comp
 
 // Status changed email → User
 exports.sendStatusUpdate = async (userEmail, userName, jobTitle, company, newStatus) => {
+    console.log('📧 sendStatusUpdate called!');
+  console.log('To:', userEmail);
   const statusColors = {
     viewed: '#2563eb',
     shortlisted: '#16a34a',
