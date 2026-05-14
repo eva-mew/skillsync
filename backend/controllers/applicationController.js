@@ -111,21 +111,20 @@ if (matchedSkills.length === 0) {
       status: 'pending'
     });
 // Send confirmation email
-await sendApplicationConfirmation(
+res.status(201).json({
+  message: 'Application submitted successfully!',
+  applicationId: application._id,
+  matchScore
+});
+
+// send email AFTER response
+sendApplicationConfirmation(
   user.email,
   user.name,
   job.title,
   job.company
-);
-    res.status(201).json({
-      message: 'Application submitted successfully!',
-      applicationId: application._id,
-      matchScore
-    });
-
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+).catch(err => console.log(err));  } catch (err) {
+    res.status(500).json({ message: err.message });  }
 };
 
 // ── Get user's own applications ───────────────────────────────────────────────
@@ -178,29 +177,30 @@ exports.updateStatus = async (req, res) => {
     ];
 
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        message: 'Invalid status'
-      });
+      return res.status(400).json({ message: 'Invalid status' });
     }
 
-    const app = await Application.findByIdAndUpdate(
-      req.params.id,
-      {
-        status,
-        ...(adminNote !== undefined && { adminNote })
-      },
-      { new: true }
-    )
-      .populate('userId', 'name email')
-      .select('-cvData');
+    let app = await Application.findById(req.params.id);
 
     if (!app) {
-      return res.status(404).json({
-        message: 'Application not found'
-      });
+      return res.status(404).json({ message: 'Application not found' });
     }
 
-    // Send email notification
+    // update
+    app.status = status;
+    if (adminNote !== undefined) {
+      app.adminNote = adminNote;
+    }
+
+    await app.save();
+
+    // IMPORTANT: populate user AFTER save
+    await app.populate('userId', 'name email');
+
+    console.log("EMAIL DEBUG:");
+    console.log(app.userId);
+
+    // email send
     if (app.userId?.email) {
       await sendStatusUpdate(
         app.userId.email,
@@ -214,9 +214,7 @@ exports.updateStatus = async (req, res) => {
     res.json(app);
 
   } catch (err) {
-    res.status(500).json({
-      message: err.message
-    });
+    res.status(500).json({ message: err.message });
   }
 };
 
