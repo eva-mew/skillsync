@@ -165,6 +165,9 @@ exports.getJobApplications = async (req, res) => {
 
 // ── Admin: update application status ─────────────────────────────────────────
 exports.updateStatus = async (req, res) => {
+  console.log('🔥 updateStatus called!');
+  console.log('ID:', req.params.id);
+  console.log('Body:', req.body);
   try {
     const { status, adminNote } = req.body;
 
