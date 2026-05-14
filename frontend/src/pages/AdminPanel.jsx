@@ -165,7 +165,7 @@ const [dateSearched, setDateSearched] = useState(false);
   // ── Application Status ────────────────────────────────────────
   const handleStatusChange = async (id, status) => {
     try {
-      await API.put(`/applications/${app._id}/status`, { status: e.target.value });
+      await API.put(`/applications/${id}/status`, { status });
       fetchData();
     } catch (err) { alert('Failed to update status'); }
   };
