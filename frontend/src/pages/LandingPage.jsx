@@ -50,24 +50,34 @@ const StatCard = ({ target, label, index, startCounting }) => {
   const count = useCountUp(target, 2000, startCounting);
   return (
     <div style={{
-      textAlign: 'center', padding: '28px 16px',
-      borderRight: index % 2 === 0 ? '1px solid var(--border)' : 'none',
-      borderBottom: index < 2 ? '1px solid var(--border)' : 'none',
-      transition: 'transform 0.2s',
-    }}
-      onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-      onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-    >
+      textAlign: 'center',
+      padding: '32px 20px',
+      background: 'linear-gradient(135deg, #1e3a52, #325476)',
+      borderRadius: '16px',
+      position: 'relative',
+      overflow: 'hidden',
+      boxShadow: '0 8px 24px rgba(50,84,118,0.25)',
+    }}>
+      {/* background circle decoration */}
       <div style={{
-        fontSize: '1.8rem', fontWeight: '800',
-        background: 'linear-gradient(135deg, var(--accent), #06b6d4)',
-        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-        transition: 'all 0.3s',
-        minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+        position: 'absolute', top: '-20px', right: '-20px',
+        width: '80px', height: '80px',
+        background: 'rgba(255,255,255,0.06)',
+        borderRadius: '50%'
+      }} />
+      <div style={{
+        fontSize: '2.2rem', fontWeight: '800', color: 'white',
+        minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transform: startCounting ? 'translateY(0)' : 'translateY(10px)',
+        opacity: startCounting ? 1 : 0,
+        transition: 'all 0.6s ease',
       }}>
         {startCounting ? count : '0'}
       </div>
-      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '500' }}>
+      <div style={{
+        fontSize: '12px', color: 'rgba(255,255,255,0.7)',
+        marginTop: '8px', fontWeight: '500'
+      }}>
         {label}
       </div>
     </div>
@@ -276,8 +286,8 @@ const handleSubscribe = async () => {
 </div>
 
      {/* STATS */}
-<div ref={statsRef} style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
-  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', maxWidth: '800px', margin: '0 auto' }}>
+<div ref={statsRef} style={{ background: 'var(--bg-secondary)', padding: '40px 20px' }}>
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', maxWidth: '800px', margin: '0 auto', gap: '16px' }}>
     {[
       { target: '2400+', label: 'Jobs Indexed' },
       { target: '850+', label: 'Startup Ideas' },
