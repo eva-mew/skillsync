@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import API from '../api';
-
+import { useNavigate } from 'react-router-dom';
 const difficultyConfig = {
   beginner: { color: 'var(--green)', bg: 'var(--green-light)', border: 'var(--green-border)', label: '🟢 Beginner' },
   intermediate: { color: 'var(--orange)', bg: 'var(--orange-light)', border: 'rgba(234,88,12,0.2)', label: '🟡 Intermediate' },
@@ -18,6 +18,7 @@ const StartupCard = ({
   const [saving, setSaving] = useState(false);
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
 
   const diff = difficultyConfig[startup.difficulty] || difficultyConfig.beginner;
   const matchScore = startup.matchScore || 0;
@@ -52,32 +53,63 @@ const StartupCard = ({
     <>
       <div className="card fade-in" style={{ padding: '20px', marginBottom: '12px' }}>
 
-        {/* TOP ROW */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-            <div style={{
-              width: '48px', height: '48px', borderRadius: '10px',
-              background: 'var(--accent-light)', border: '1.5px solid var(--accent-border)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '22px', flexShrink: 0
-            }}>💡</div>
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 4px 0' }}>
-                {startup.title}
-              </h3>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span style={{
-                  padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600',
-                  background: diff.bg, color: diff.color, border: `1px solid ${diff.border}`
-                }}>
-                  {diff.label}
-                </span>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                  {startup.category}
-                </span>
-              </div>
-            </div>
-          </div>
+      {/* TOP ROW */}
+<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+  <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+
+    <div
+      onClick={() => navigate(`/startups/${startup._id}`)}
+      style={{
+        width: '48px',
+        height: '48px',
+        borderRadius: '10px',
+        background: 'var(--accent-light)',
+        border: '1.5px solid var(--accent-border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '22px',
+        flexShrink: 0,
+        cursor: 'pointer'
+      }}
+    >
+      💡
+    </div>
+
+    <div>
+      <h3
+        onClick={() => navigate(`/startups/${startup._id}`)}
+        style={{
+          fontSize: '16px',
+          fontWeight: '700',
+          color: 'var(--text-primary)',
+          margin: '0 0 4px 0',
+          cursor: 'pointer'
+        }}
+      >
+        {startup.title}
+      </h3>
+
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <span style={{
+          padding: '2px 8px',
+          borderRadius: '4px',
+          fontSize: '11px',
+          fontWeight: '600',
+          background: diff.bg,
+          color: diff.color,
+          border: `1px solid ${diff.border}`
+        }}>
+          {diff.label}
+        </span>
+
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+          {startup.category}
+        </span>
+      </div>
+    </div>
+
+  </div>
 
           {/* Match Score */}
           {matchScore > 0 && (
@@ -201,9 +233,18 @@ const StartupCard = ({
               }}
             >✕</button>
 
-            <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '6px' }}>
-              💡 {startup.title}
-            </h3>
+            <h3
+  onClick={() => navigate(`/startups/${startup._id}`)}
+  style={{
+    fontSize: '16px',
+    fontWeight: '700',
+    color: 'var(--text-primary)',
+    margin: '0 0 4px 0',
+    cursor: 'pointer'
+  }}
+>
+  {startup.title}
+</h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
               Step-by-step launch roadmap · {startup.timeToLaunch} to launch
             </p>
