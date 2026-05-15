@@ -20,6 +20,8 @@ const { user } = useAuth();
 const handleSave = (jobId, savedStatus) => {
   if (savedStatus) {
     setSavedJobs(prev => [...prev, jobId]);
+  } else {
+    setSavedJobs(prev => prev.filter(id => id !== jobId));
   }
 };
 
@@ -45,9 +47,30 @@ useEffect(() => {
       console.error(err);
     }
   };
+  
 
   fetchProfile();
 }, []);
+useEffect(() => {
+  const fetchSaved = async () => {
+    try {
+      const res = await API.get('/saved');
+
+      const savedIds = res.data
+        .filter(item => item.itemType === 'job')
+        .map(item => item.itemId);
+
+      setSavedJobs(savedIds);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (user) {
+    fetchSaved();
+  }
+}, [user]);
+
   const filtered = jobs.filter(job => {
     const matchSearch = job.title.toLowerCase().includes(search.toLowerCase()) ||
       job.company.toLowerCase().includes(search.toLowerCase());
@@ -56,6 +79,7 @@ useEffect(() => {
     const matchExp = !filters.experience || job.experience === filters.experience;
     return matchSearch && matchMode && matchType && matchExp;
   });
+
 
   const handleCompare = (job) => {
     if (compareList.find(j => j._id === job._id)) {

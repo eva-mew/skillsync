@@ -8,6 +8,7 @@ import Onboarding from './pages/Onboarding';
 import Jobs from './pages/Jobs';
 import Startups from './pages/Startups';
 import Dashboard from './pages/Dashboard';
+import StartupDetails from './pages/StartupDetails';
 import AdminPanel from './pages/AdminPanel';
 
 import Profile from './pages/Profile';
@@ -49,6 +50,7 @@ function AppRoutes() {
       <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
       <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
       <Route path="/startups" element={<ProtectedRoute><Startups /></ProtectedRoute>} />
+      <Route path="/startups/:id" element={<ProtectedRoute><StartupDetails /></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
      

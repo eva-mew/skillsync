@@ -160,7 +160,13 @@ const Dashboard = () => {
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{item.itemCompany}</div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => navigate('/jobs')} className="btn-ghost" style={{ fontSize: '12px', padding: '5px 10px' }}>View</button>
+                      <button
+  onClick={() => navigate(`/jobs/${item.itemId}`)}
+  className="btn-ghost"
+  style={{ fontSize: '12px', padding: '5px 10px' }}
+>
+  View
+</button>
                       <button onClick={() => handleUnsave(item._id)} style={{ padding: '5px 10px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Remove</button>
                     </div>
                   </div>
@@ -187,7 +193,30 @@ const Dashboard = () => {
                       <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>{item.itemTitle}</div>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Startup Idea</div>
                     </div>
-                    <button onClick={() => handleUnsave(item._id)} style={{ padding: '5px 10px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Remove</button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+  <button
+    onClick={() => navigate(`/startups/${item.itemId}`)}
+    className="btn-ghost"
+    style={{ fontSize: '12px', padding: '5px 10px' }}
+  >
+    View
+  </button>
+
+  <button
+    onClick={() => handleUnsave(item._id)}
+    style={{
+      padding: '5px 10px',
+      background: '#fef2f2',
+      color: '#dc2626',
+      border: '1px solid #fecaca',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '12px'
+    }}
+  >
+    Remove
+  </button>
+</div>
                   </div>
                 ))}
               </div>
