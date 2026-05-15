@@ -194,7 +194,7 @@ const handleSubscribe = async () => {
 </div>
 {/* PREMIUM AD BANNER */}
 <div style={{
-  background: 'linear-gradient(135deg, #1a7a3a, #0f4d25)',
+ background: 'linear-gradient(135deg, #1e3a52, #4B7DAF)',
   padding: '20px 24px',
   textAlign: 'center',
   display: 'flex',

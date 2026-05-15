@@ -255,11 +255,11 @@ useEffect(() => {
   {/* PREMIUM AD CARD */}
   {!user?.isPremium && (
     <div style={{
-      background: 'linear-gradient(135deg, #1a7a3a 0%, #0f4d25 50%, #1d4ed8 100%)',
+      background: 'linear-gradient(135deg, #1e3a52 0%, #325476 50%, #4B7DAF 100%)',
       borderRadius: '16px',
       padding: '24px',
       color: 'white',
-      boxShadow: '0 8px 32px rgba(26,122,58,0.35)',
+      boxShadow: '0 8px 32px rgba(50,84,118,0.35)',
       position: 'relative',
       overflow: 'hidden'
     }}>
