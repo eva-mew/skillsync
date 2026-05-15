@@ -175,7 +175,7 @@ const handleSubscribe = async () => {
   <div style={{ textAlign: 'center', padding: '60px 20px 48px', position: 'relative', zIndex: 2, width: '100%' }}>
     <h1 style={{ fontSize: 'clamp(2rem,6vw,4.5rem)', fontWeight: '800', letterSpacing: '-2px', lineHeight: '1.05', color: 'white', marginBottom: '20px' }}>
       Your Skills.<br />
-      <span style={{ background: 'linear-gradient(135deg, #4ade80, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+      <span style={{ background: 'linear-gradient(135deg, #BFD1E3, #4B7DAF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
         Your Perfect Match.
       </span>
     </h1>
