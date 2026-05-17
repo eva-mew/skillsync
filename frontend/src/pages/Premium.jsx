@@ -165,29 +165,97 @@ useEffect(() => {
 
         {/* Current Status Card */}
         {premiumStatus && (
-          <div className="card" style={{ padding: '24px', marginBottom: '28px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-            <div style={{ fontSize: '36px' }}>{premiumStatus.isPremium ? '👑' : '🔓'}</div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
-                Current Plan: {premiumStatus.isPremium ? 'Premium Member ✅' : 'Free Plan'}
-              </h3>
-              {premiumStatus.isPremium && (
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  Valid until: {new Date(premiumStatus.premiumExpiresAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </p>
-              )}
-              {!premiumStatus.isPremium && (
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  Upgrade to access exclusive premium jobs
-                </p>
-              )}
+
+        <div className="card" style={{ padding: '32px' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '6px' }}>
+              What you get
             </div>
-            {premiumStatus.isPremium && (
-              <span style={{ padding: '6px 16px', borderRadius: '100px', background: 'var(--green-light)', color: 'var(--green)', border: '1px solid var(--green-border)', fontSize: '13px', fontWeight: '700' }}>
-                ✓ Active
-              </span>
-            )}
+            <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+              ⚡ Why Go Premium?
+            </h3>
           </div>
+
+          {[
+            {
+              icon: '👑',
+              title: 'Exclusive Premium Jobs',
+              desc: 'Access premium job listings with higher salaries and top companies — not visible to free users.',
+              tag: 'Exclusive Access'
+            },
+            {
+              icon: '🏢',
+              title: 'Full Company Details',
+              desc: 'See company website, team size, office location and full company description before applying.',
+              tag: 'Extra Info'
+            },
+            {
+              icon: '⭐',
+              title: 'Priority Application',
+              desc: 'Your CV appears at the top of the admin review list, sorted by match score automatically.',
+              tag: 'First in Line'
+            },
+            {
+              icon: '📊',
+              title: 'Advanced Match Breakdown',
+              desc: 'See detailed skill, salary, work mode and experience breakdown — not just a percentage.',
+              tag: 'Smart Insights'
+            },
+            {
+              icon: '🔔',
+              title: 'Instant Email Alerts',
+              desc: 'Get notified immediately when admin views, shortlists or selects your application.',
+              tag: 'Real-time'
+            },
+            {
+              icon: '📥',
+              title: 'Invoice Download',
+              desc: 'Download official payment receipts for your Premium subscription for your records.',
+              tag: 'Official Receipt'
+            },
+          ].map((f, i) => (
+            <div key={i} style={{
+              display: 'flex', gap: '16px', alignItems: 'flex-start',
+              padding: '18px 0',
+              borderBottom: i < 5 ? '1px solid var(--border)' : 'none',
+              transition: 'background 0.2s'
+            }}>
+              {/* Icon box */}
+              <div style={{
+                width: '46px', height: '46px', borderRadius: '12px',
+                background: 'var(--accent-light)',
+                border: '1px solid var(--accent-border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '22px', flexShrink: 0
+              }}>{f.icon}</div>
+
+              {/* Text */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                    {f.title}
+                  </span>
+                  <span style={{
+                    fontSize: '10px', fontWeight: '700', padding: '2px 8px',
+                    borderRadius: '100px', background: '#fef3c7', color: '#d97706',
+                    letterSpacing: '0.3px'
+                  }}>{f.tag}</span>
+                </div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                  {f.desc}
+                </div>
+              </div>
+
+              {/* Check */}
+              <div style={{
+                width: '24px', height: '24px', borderRadius: '50%',
+                background: 'var(--green-light)', border: '1px solid var(--green-border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, fontSize: '13px', color: 'var(--green)', fontWeight: '700'
+              }}>✓</div>
+            </div>
+          ))}
+        </div>
         )}
 
         {/* Pricing Card */}

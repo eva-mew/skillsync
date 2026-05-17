@@ -1,4 +1,5 @@
 const Job = require('../models/Job');
+const Application = require('../models/Application');
 
 // @route  GET /api/jobs
 // @access Public
@@ -7,7 +8,6 @@ const getJobs = async (req, res) => {
     const { search, workMode, type, experience } = req.query;
 
     let query = {};
-
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -19,7 +19,16 @@ const getJobs = async (req, res) => {
     if (experience) query.experience = experience;
 
     const jobs = await Job.find(query).sort({ createdAt: -1 });
-    res.json(jobs);
+
+    // Add application count to each job
+    const jobsWithCount = await Promise.all(
+      jobs.map(async (job) => {
+        const count = await Application.countDocuments({ jobId: job._id });
+        return { ...job.toObject(), applicationCount: count };
+      })
+    );
+
+    res.json(jobsWithCount);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -30,10 +39,25 @@ const getJobs = async (req, res) => {
 const getJobById = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
-    if (!job) {
-      return res.status(404).json({ message: 'Job not found' });
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+
+    // সব applicants match score অনুযায়ী sort করা
+    const applicants = await Application.find({ jobId: job._id })
+      .select('userId matchScore')
+      .sort({ matchScore: -1 });
+
+    const applicationCount = applicants.length;
+
+    // logged in user এর rank বের করো
+    let userRank = null;
+    if (req.user) {
+      const idx = applicants.findIndex(
+        a => a.userId?.toString() === req.user._id?.toString()
+      );
+      userRank = idx !== -1 ? idx + 1 : null;
     }
-    res.json(job);
+
+    res.json({ ...job.toObject(), applicationCount, userRank });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

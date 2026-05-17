@@ -550,15 +550,32 @@ const [dateSearched, setDateSearched] = useState(false);
                   </td>
                   <td style={{ padding: '10px 14px' }}>
                     {app.cvFileName ? (
-                      <button onClick={async () => {
-                        try {
-                          const res = await API.get(`/applications/cv/${app._id}`, { responseType: 'blob' });
-                          const blob = new Blob([res.data], { type: res.headers['content-type'] });
-                          window.open(URL.createObjectURL(blob), '_blank');
-                        } catch (err) { alert('CV not found'); }
-                      }} style={{ padding: '5px 10px', background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid var(--accent-border)', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-                        📄 View CV
-                      </button>
+                   <button onClick={async () => {
+  try {
+    const res = await API.get(`/applications/cv/${app._id}`, { responseType: 'blob' });
+    const blob = new Blob([res.data], { type: res.headers['content-type'] });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    
+    const contentType = res.headers['content-type'] || '';
+    if (contentType.includes('pdf')) {
+      a.target = '_blank';
+    } else {
+      a.download = `CV_${app.applicantName?.replace(/\s/g, '_') || app._id}.docx`;
+    }
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    alert('CV not found or failed to load');
+  }
+}} style={{ padding: '5px 10px', background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid var(--accent-border)', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+  📄 View CV
+</button>
                     ) : <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No CV</span>}
                   </td>
                   <td style={{ padding: '10px 14px' }}>
@@ -906,16 +923,19 @@ const [dateSearched, setDateSearched] = useState(false);
 <td style={{ padding:'12px 16px' }}>
   <select
     value={app.status}
-    onChange={async (e) => {
-      try {
-        await API.put(`/applications/${app._id}/status`, { status: e.target.value });
-        setApplications(prev => prev.map(a =>
-          a._id === app._id ? { ...a, status: e.target.value } : a
-        ));
-        setSuccess(`Status updated to ${e.target.value}!`);
-        setTimeout(() => setSuccess(''), 2500);
-      } catch (err) { console.error(err); }
-    }}
+  onChange={async (e) => {
+  const newStatus = e.target.value;
+  try {
+    await API.put(`/applications/${app._id}/status`, { status: newStatus });
+    // optimistic update + full refresh দুটোই করো
+    setApplications(prev =>
+      prev.map(a => a._id === app._id ? { ...a, status: newStatus } : a)
+    );
+  } catch (err) {
+    alert('Status update failed. Check if backend route /applications/:id/status exists.');
+    console.error(err.response?.data || err);
+  }
+}}
     style={{
       padding:'5px 8px', borderRadius:'6px', border:'1px solid var(--border2)',
       background:'var(--surface)', color:'var(--text-primary)',

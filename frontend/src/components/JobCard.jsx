@@ -3,7 +3,7 @@ import API from '../api';
 import { useNavigate } from 'react-router-dom';
 import ApplyModal from './ApplyModal';
 import { useAuth } from '../context/AuthContext';
-// Company logo color map
+
 const logoColors = {
   'A': '#2563eb', 'B': '#16a34a', 'C': '#dc2626', 'D': '#9333ea',
   'E': '#ea580c', 'F': '#0891b2', 'G': '#65a30d', 'H': '#db2777',
@@ -13,7 +13,6 @@ const logoColors = {
   'U': '#9333ea', 'V': '#ea580c', 'W': '#0891b2', 'X': '#65a30d',
   'Y': '#db2777', 'Z': '#7c3aed'
 };
-
 
 const getMatchClass = (score) => {
   if (score >= 80) return 'match-high';
@@ -37,18 +36,19 @@ const JobCard = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-   const userSkills = profileSkills.length > 0
-  ? profileSkills
-  : (user?.skills || []);
-const [showApplyModal, setShowApplyModal] = useState(false);
-const [applied, setApplied] = useState(false);
+  const userSkills = profileSkills.length > 0 ? profileSkills : (user?.skills || []);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applied, setApplied] = useState(false);
   const [isSaved, setIsSaved] = useState(saved);
   const [saving, setSaving] = useState(false);
-  
   const [copied, setCopied] = useState(false);
 
   const firstLetter = job.company?.charAt(0).toUpperCase() || 'C';
   const logoColor = logoColors[firstLetter] || '#2563eb';
+
+  // Premium user check
+  const isPremiumUser = user?.isPremium;
+  const isTopApplicant = isPremiumUser && job.matchScore >= 80;
 
   const handleSave = async () => {
     setSaving(true);
@@ -75,26 +75,6 @@ const [applied, setApplied] = useState(false);
     setTimeout(() => setCopied(false), 2000);
   };
 
-const handleApply = async () => {
-  // Check if premium job — redirect to detail page
-  if (job.locked || job.isPremium) {
-    navigate(`/jobs/${job._id}`);
-    return;
-  }
-
-  if (applied) return;
-  try {
-    await API.post('/applications', { jobId: job._id });
-    setApplied(true);
-  } catch (err) {
-    if (err.response?.data?.message === 'You have already applied for this job') {
-      setApplied(true);
-    } else {
-      alert(err.response?.data?.message || 'Apply failed');
-    }
-  }
-};
-
   return (
     <div className="card fade-in" style={{ padding: '20px', marginBottom: '12px' }}>
 
@@ -103,36 +83,59 @@ const handleApply = async () => {
 
         {/* Company Logo + Info */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-          <div className="company-logo" onClick={() => navigate(`/jobs/${job._id}`)} style={{ background: `${logoColor}15`, color: logoColor, border: `1.5px solid ${logoColor}30`, fontSize: '18px', fontWeight: '800', cursor: 'pointer' }}>
-  {firstLetter}
-</div>
+          <div
+            className="company-logo"
+            onClick={() => navigate(`/jobs/${job._id}`)}
+            style={{ background: `${logoColor}15`, color: logoColor, border: `1.5px solid ${logoColor}30`, fontSize: '18px', fontWeight: '800', cursor: 'pointer' }}
+          >
+            {firstLetter}
+          </div>
           <div>
-           <h3 onClick={() => navigate(`/jobs/${job._id}`)} style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 2px 0', lineHeight: '1.3', cursor: 'pointer' }}>
-  {job.title}
-</h3>
+            <h3
+              onClick={() => navigate(`/jobs/${job._id}`)}
+              style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 2px 0', lineHeight: '1.3', cursor: 'pointer' }}
+            >
+              {job.title}
+            </h3>
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500' }}>
               {job.company}
             </div>
           </div>
         </div>
 
-        {/* Match Score */}
-        {job.matchScore !== undefined && (
-          <div className={`match-score ${getMatchClass(job.matchScore)}`}>
-            {getMatchLabel(job.matchScore)} · {job.matchScore}%
+        {/* Right side badges */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+          {/* Match Score */}
+          {job.matchScore !== undefined && (
+            <div className={`match-score ${getMatchClass(job.matchScore)}`}>
+              {getMatchLabel(job.matchScore)} · {job.matchScore}%
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {/* Premium Badge */}
+            {job.isPremium && (
+              <span style={{
+                padding: '3px 9px', borderRadius: '100px',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: 'white', fontSize: '11px', fontWeight: '700'
+              }}>
+                👑 Premium
+              </span>
+            )}
+
+            {/* TOP APPLICANT badge — only for premium users with 80%+ match */}
+            {isTopApplicant && (
+              <span style={{
+                padding: '3px 9px', borderRadius: '100px',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                color: 'white', fontSize: '11px', fontWeight: '700'
+              }}>
+                ⚡ Top Applicant
+              </span>
+            )}
           </div>
-        )}
-        {/* Premium Badge */}
-{job.isPremium && (
-  <span style={{
-    padding: '4px 10px', borderRadius: '100px',
-    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-    color: 'white', fontSize: '11px', fontWeight: '700',
-    marginLeft: '6px'
-  }}>
-    👑 Premium
-  </span>
-)}
+        </div>
       </div>
 
       {/* META INFO */}
@@ -152,46 +155,39 @@ const handleApply = async () => {
         <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--green)', display: 'flex', alignItems: 'center', gap: '4px' }}>
           💰 ৳{job.salary}/mo
         </span>
+
         {job.deadline && (
-  <>
-    <span style={{ color: 'var(--border2)' }}>·</span>
+          <>
+            <span style={{ color: 'var(--border2)' }}>·</span>
+            <span style={{
+              fontSize: '12px',
+              color: new Date(job.deadline) < new Date() ? '#dc2626' : '#d97706',
+              fontWeight: '600'
+            }}>
+              📅 Deadline: {new Date(job.deadline).toLocaleDateString('en-BD')}
+              {new Date(job.deadline) < new Date() && ' (Expired)'}
+            </span>
+          </>
+        )}
 
-    <span
-      style={{
-        fontSize: '12px',
-        color:
-          new Date(job.deadline) < new Date()
-            ? '#dc2626'
-            : '#d97706',
-        fontWeight: '600'
-      }}
-    >
-      📅 Deadline:{' '}
-      {new Date(job.deadline).toLocaleDateString('en-BD')}
+        {!job.isActive && (
+          <>
+            <span style={{ color: 'var(--border2)' }}>·</span>
+            <span style={{ padding: '2px 8px', background: '#fef2f2', color: '#dc2626', borderRadius: '4px', fontSize: '11px', fontWeight: '600' }}>
+              🔒 Closed
+            </span>
+          </>
+        )}
 
-      {new Date(job.deadline) < new Date() && ' (Expired)'}
-    </span>
-  </>
-)}
-
-{!job.isActive && (
-  <>
-    <span style={{ color: 'var(--border2)' }}>·</span>
-
-    <span
-      style={{
-        padding: '2px 8px',
-        background: '#fef2f2',
-        color: '#dc2626',
-        borderRadius: '4px',
-        fontSize: '11px',
-        fontWeight: '600'
-      }}
-    >
-      🔒 Closed
-    </span>
-  </>
-)}
+        {/* PREMIUM ONLY — applicant count */}
+        {isPremiumUser && job.applicationCount !== undefined && (
+          <>
+            <span style={{ color: 'var(--border2)' }}>·</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              👥 {job.applicationCount} applied
+            </span>
+          </>
+        )}
       </div>
 
       {/* SKILLS */}
@@ -214,27 +210,53 @@ const handleApply = async () => {
         )}
       </div>
 
+      {/* PREMIUM INSIGHT BAR — only for premium users */}
+      {isPremiumUser && job.applicationCount !== undefined && job.matchScore !== undefined && (
+        <div style={{
+          background: 'var(--accent-light)',
+          border: '1px solid var(--accent-border)',
+          borderRadius: '8px',
+          padding: '10px 14px',
+          marginBottom: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap'
+        }}>
+          <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: '600' }}>
+            👑 Premium Insight
+          </span>
+          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            {job.applicationCount === 0
+              ? '🚀 Be the first to apply!'
+              : job.applicationCount <= 5
+              ? `🔥 Only ${job.applicationCount} applicants — apply fast!`
+              : `👥 ${job.applicationCount} people applied`}
+          </span>
+          {isTopApplicant && (
+            <span style={{ fontSize: '12px', color: 'var(--green)', fontWeight: '600' }}>
+              ⚡ Your profile is among top candidates
+            </span>
+          )}
+        </div>
+      )}
+
       {/* DIVIDER */}
       <div className="divider" style={{ margin: '12px 0' }} />
 
       {/* ACTION BUTTONS */}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
 
-        {/* Save Button */}
         <button
           onClick={handleSave}
           disabled={saving || isSaved}
           className="btn-ghost tooltip"
           data-tip={isSaved ? 'Saved!' : 'Save job'}
-          style={{
-            color: isSaved ? 'var(--accent)' : 'var(--text-muted)',
-            background: isSaved ? 'var(--accent-light)' : 'transparent'
-          }}
+          style={{ color: isSaved ? 'var(--accent)' : 'var(--text-muted)', background: isSaved ? 'var(--accent-light)' : 'transparent' }}
         >
           {isSaved ? '🔖 Saved' : saving ? '...' : '🔖 Save'}
         </button>
 
-        {/* Share Button */}
         <button
           onClick={handleShare}
           className="btn-ghost tooltip"
@@ -243,69 +265,52 @@ const handleApply = async () => {
         >
           {copied ? '✅ Copied!' : '🔗 Share'}
         </button>
-{/* Compare Button */}
-<button
-  onClick={(e) => { e.stopPropagation(); if(onCompare) onCompare(); }}
-  className="btn-ghost tooltip"
-  data-tip={isInCompare ? 'Remove from compare' : 'Add to compare'}
-  style={{
-    color: isInCompare ? 'var(--orange)' : 'var(--text-muted)',
-    background: isInCompare ? 'var(--orange-light)' : 'transparent'
-  }}
->
-  {isInCompare ? '⚔️ Added' : '⚔️ Compare'}
-</button>
-        {/* Spacer */}
+
+        <button
+          onClick={(e) => { e.stopPropagation(); if (onCompare) onCompare(); }}
+          className="btn-ghost tooltip"
+          data-tip={isInCompare ? 'Remove from compare' : 'Add to compare'}
+          style={{ color: isInCompare ? 'var(--orange)' : 'var(--text-muted)', background: isInCompare ? 'var(--orange-light)' : 'transparent' }}
+        >
+          {isInCompare ? '⚔️ Added' : '⚔️ Compare'}
+        </button>
+
         <div style={{ flex: 1 }} />
 
-        {/* Experience Badge */}
         <span className="badge badge-gray" style={{ fontSize: '11px' }}>
           {job.experience}
         </span>
-{/* Apply Button */}
 
-{!job.isActive ? (
-  <button disabled style={{ padding: '8px 18px', borderRadius: '8px', border: 'none',
-    background: '#e5e7eb', color: '#6b7280', fontSize: '13px', fontWeight: '600' }}>
-    🔒 Job Closed
-  </button>
+        {/* Apply Button */}
+        {!job.isActive ? (
+          <button disabled style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: '#e5e7eb', color: '#6b7280', fontSize: '13px', fontWeight: '600' }}>
+            🔒 Job Closed
+          </button>
+        ) : (job.isPremium && !user?.isPremium) ? (
+          <button
+            onClick={() => navigate('/premium')}
+            style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+          >
+            👑 Unlock Premium
+          </button>
+        ) : applied ? (
+          <button disabled className="btn-primary" style={{ background: 'var(--green)', padding: '8px 18px', fontSize: '13px', opacity: 0.9 }}>
+            ✅ Applied!
+          </button>
+        ) : (
+          <button onClick={() => setShowApplyModal(true)} className="btn-primary" style={{ padding: '8px 18px', fontSize: '13px' }}>
+            Apply Now →
+          </button>
+        )}
 
-) : (job.isPremium && !user?.isPremium) ? (
-  <button
-    onClick={() => navigate('/premium')}
-    style={{ padding: '8px 18px', borderRadius: '8px', border: 'none',
-      background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-      color: 'white', fontSize: '13px', fontWeight: '600',
-      cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
-  >
-    👑 Unlock Premium
-  </button>
-
-) : applied ? (
-  <button disabled className="btn-primary"
-    style={{ background: 'var(--green)', padding: '8px 18px', fontSize: '13px', opacity: 0.9 }}>
-    ✅ Applied!
-  </button>
-
-) : (
-  <button onClick={() => setShowApplyModal(true)} className="btn-primary"
-    style={{ padding: '8px 18px', fontSize: '13px' }}>
-    Apply Now →
-  </button>
-)}
-
-{/* Apply Modal */}
-{showApplyModal && (
-  <ApplyModal
-  job={job}
-  userSkills={userSkills}
-    onClose={() => setShowApplyModal(false)}
-    onSuccess={() => {
-      setApplied(true);
-      setShowApplyModal(false);
-    }}
-  />
-)}
+        {showApplyModal && (
+          <ApplyModal
+            job={job}
+            userSkills={userSkills}
+            onClose={() => setShowApplyModal(false)}
+            onSuccess={() => { setApplied(true); setShowApplyModal(false); }}
+          />
+        )}
       </div>
     </div>
   );
