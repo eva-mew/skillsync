@@ -1,19 +1,30 @@
 const User = require('../models/User');
 
-// Profile strength calculation
+// Smart profile strength calculation
 const calculateStrength = (user) => {
   let score = 0;
-  if (user.name) score += 10;
-  if (user.email) score += 10;
-  if (user.skills && user.skills.length >= 5) score += 25;
-  else if (user.skills && user.skills.length >= 3) score += 15;
-  else if (user.skills && user.skills.length >= 1) score += 8;
-  if (user.experience) score += 15;
-  if (user.workPreference) score += 15;
-  if (user.location) score += 10;
-  if (user.interests && user.interests.length >= 2) score += 10;
-  else if (user.interests && user.interests.length >= 1) score += 5;
-  if (user.budget) score += 5;
+
+  // Skills — 40 points (most important)
+  if (user.skills && user.skills.length >= 5) score += 40;
+  else if (user.skills && user.skills.length >= 3) score += 28;
+  else if (user.skills && user.skills.length >= 1) score += 15;
+
+  // Experience — 20 points
+  if (user.experience && user.experience !== '') score += 20;
+
+  // Work preference — 15 points
+  if (user.workPreference && user.workPreference !== '') score += 15;
+
+  // Interests — 15 points
+  if (user.interests && user.interests.length >= 3) score += 15;
+  else if (user.interests && user.interests.length >= 1) score += 8;
+
+  // Budget — 5 points
+  if (user.budget && user.budget !== '') score += 5;
+
+  // Name + Email — 5 points (always filled after registration)
+  if (user.name && user.email) score += 5;
+
   return Math.min(score, 100);
 };
 // @route  GET /api/profile
