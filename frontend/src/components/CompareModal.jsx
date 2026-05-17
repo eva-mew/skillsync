@@ -2,10 +2,11 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const CompareModal = ({ jobs, onClose, onRemove }) => {
+   const { user } = useAuth();
   if (!jobs || jobs.length === 0) return null;
 
   const [job1, job2] = jobs;
-  const { user } = useAuth();
+ 
 
   // ── Detailed Scoring Logic ──────────────────────────────────────
   const scoreJob = (job) => {
