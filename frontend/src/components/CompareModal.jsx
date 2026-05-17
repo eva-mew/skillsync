@@ -12,8 +12,7 @@ const CompareModal = ({ jobs, onClose, onRemove }) => {
  const scoreJob = (job) => {
   if (!job) return { total: 0, breakdown: {} };
 
-  const userSkillsRaw = user?.skills || [];
-  const userSkills = userSkillsRaw.map(s => s.toLowerCase().trim());
+  const userSkills = (job.matchedSkills || []).map(s => s.toLowerCase().trim());
   const jobSkills  = (job.requiredSkills || []).map(s => s.toLowerCase().trim());
 
   // ── 1. Skill match — 40 points ──────────────────────────
