@@ -9,7 +9,6 @@ const {
 } = require('../controllers/jobController');
 const { protect, adminOnly, optionalProtect } = require('../middleware/authMiddleware');
 
-// পুরনো duplicate lines সব গেছে — শুধু এগুলো থাকবে
 router.get('/', optionalProtect, getJobs);
 router.get('/:id', optionalProtect, getJobById);
 router.post('/', protect, adminOnly, createJob);

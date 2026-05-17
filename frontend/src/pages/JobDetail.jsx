@@ -382,9 +382,9 @@ const computedMatchedSkills = job?.requiredSkills?.filter(skill =>
                       #{job.userRank}
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Your Rank</div>
-                    <div style={{ fontSize: '11px', marginTop: '6px', fontWeight: '600', color: job.userRank <= 3 ? 'var(--green)' : 'var(--text-muted)' }}>
-                      {job.userRank === 1 ? '🏆 Top applicant!' : job.userRank <= 3 ? '⭐ Top 3!' : 'Among applicants'}
-                    </div>
+<div style={{ fontSize: '11px', marginTop: '6px', fontWeight: '600', color: job.userRank === 1 ? 'var(--green)' : 'var(--text-muted)' }}>
+  out of {job.applicationCount} applicants
+</div>
                   </div>
                 )}
 
