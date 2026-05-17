@@ -66,7 +66,7 @@ const Dashboard = () => {
   const savedJobs = saved.filter(s => s.itemType === 'job');
   const savedStartups = saved.filter(s => s.itemType === 'startup');
   const strength = profile?.profileComplete || 0;
-  const unreadReplies = messages.filter(m => m.status === 'replied' && m.reply).length;
+  const unreadReplies = messages.filter(m => m.status === 'replied' && m.reply && m.userSeen !== true).length;
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

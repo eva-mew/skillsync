@@ -56,7 +56,11 @@ const markAsRead = async (req, res) => {
 const markRepliesSeen = async (req, res) => {
   try {
     await ContactMessage.updateMany(
-      { userId: req.user._id, status: 'replied', userSeen: false },
+      { 
+        userId: req.user._id, 
+        status: 'replied',
+        userSeen: { $ne: true }  // false বা undefined দুটোই ধরবে
+      },
       { userSeen: true }
     );
     res.json({ success: true });
