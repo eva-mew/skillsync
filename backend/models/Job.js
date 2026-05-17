@@ -42,7 +42,11 @@ companyLogo: { type: String, default: '' },
 companyDescription: { type: String, default: '' },
 companyWebsite: { type: String, default: '' },
 companySize: { type: String, default: '' },
-companyLocation: { type: String, default: '' }
+companyLocation: { type: String, default: '' },
+openPositions: { type: [String], default: [] },
+workCategories: { type: [String], default: [] },
+partnerCompanies: { type: [String], default: [] },
+globalOffices: { type: [String], default: [] }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Job', JobSchema);

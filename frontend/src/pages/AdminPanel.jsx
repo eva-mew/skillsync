@@ -36,7 +36,7 @@ const AdminPanel = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
 
-  const emptyJob = { title: '', company: '', description: '', requiredSkills: '', location: 'Dhaka', salary: '', type: 'full-time', workMode: 'remote', experience: 'fresher', isPremium: false, companyDescription: '', companyWebsite: '', companySize: '' };
+  const emptyJob = { title: '', company: '', description: '', requiredSkills: '', location: 'Dhaka', salary: '', type: 'full-time', workMode: 'remote', experience: 'fresher', isPremium: false, companyDescription: '', companyWebsite: '', companySize: '', openPositions: '', workCategories: '', partnerCompanies: '', globalOffices: '' };
   const emptyStartup = { title: '', description: '', category: '', requiredSkills: '', budget: 'low', difficulty: 'beginner', estimatedCost: '', potentialRevenue: '', timeToLaunch: '', viabilityScore: 70, roadmap: '' };
   const [jobForm, setJobForm] = useState(emptyJob);
   const [startupForm, setStartupForm] = useState(emptyStartup);
@@ -110,7 +110,15 @@ const [dateSearched, setDateSearched] = useState(false);
   // ── Job CRUD ──────────────────────────────────────────────────
   const handleJobSubmit = async () => {
     try {
-      const data = { ...jobForm, requiredSkills: jobForm.requiredSkills.split(',').map(s => s.trim()).filter(Boolean) };
+      const splitArr = (val) => (val || '').split(',').map(s => s.trim()).filter(Boolean);
+      const data = {
+        ...jobForm,
+        requiredSkills: splitArr(jobForm.requiredSkills),
+        openPositions: splitArr(jobForm.openPositions),
+        workCategories: splitArr(jobForm.workCategories),
+        partnerCompanies: splitArr(jobForm.partnerCompanies),
+        globalOffices: splitArr(jobForm.globalOffices),
+      };
       if (editingJob) {
         await API.put(`/jobs/${editingJob._id}`, data);
       } else {
@@ -122,7 +130,14 @@ const [dateSearched, setDateSearched] = useState(false);
 
   const handleEditJob = (job) => {
     setEditingJob(job);
-    setJobForm({ ...job, requiredSkills: job.requiredSkills?.join(', ') || '' });
+    setJobForm({
+      ...job,
+      requiredSkills: job.requiredSkills?.join(', ') || '',
+      openPositions: job.openPositions?.join(', ') || '',
+      workCategories: job.workCategories?.join(', ') || '',
+      partnerCompanies: job.partnerCompanies?.join(', ') || '',
+      globalOffices: job.globalOffices?.join(', ') || '',
+    });
     setShowJobForm(true);
     setActiveTab('jobs');
     window.scrollTo(0, 0);
@@ -339,8 +354,6 @@ const [dateSearched, setDateSearched] = useState(false);
                     { label: 'Company', key: 'company', ph: 'Tech Company BD' },
                     { label: 'Location', key: 'location', ph: 'Dhaka, Bangladesh' },
                     { label: 'Salary (BDT/month)', key: 'salary', ph: '50000' },
-                    { label: 'Company Website', key: 'companyWebsite', ph: 'https://company.com' },
-                    { label: 'Company Size', key: 'companySize', ph: '50-200 employees' },
                   ].map(f => (
                     <div key={f.key}>
                       <label style={labelStyle}>{f.label}</label>
@@ -386,14 +399,51 @@ const [dateSearched, setDateSearched] = useState(false);
                     <label style={labelStyle}>Job Description</label>
                     <textarea style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} placeholder="Job description..." value={jobForm.description} onChange={e => setJobForm({ ...jobForm, description: e.target.value })} />
                   </div>
-                  <div style={{ gridColumn: '1/-1' }}>
-                    <label style={labelStyle}>Company Description</label>
-                    <textarea style={{ ...inputStyle, minHeight: '60px', resize: 'vertical' }} placeholder="About the company..." value={jobForm.companyDescription} onChange={e => setJobForm({ ...jobForm, companyDescription: e.target.value })} />
+                  <div style={{ gridColumn: '1/-1', display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 16px', background: jobForm.isPremium ? '#fef3c7' : 'var(--bg-secondary)', borderRadius: '10px', border: `1.5px solid ${jobForm.isPremium ? '#f59e0b' : 'var(--border)'}`, cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => setJobForm({ ...jobForm, isPremium: !jobForm.isPremium })}>
+                    <input type="checkbox" checked={jobForm.isPremium || false} onChange={e => setJobForm({ ...jobForm, isPremium: e.target.checked })} style={{ width: '16px', height: '16px', accentColor: '#f59e0b', cursor: 'pointer' }} onClick={e => e.stopPropagation()} />
+                    <div>
+                      <span style={{ fontSize: '13px', fontWeight: '700', color: jobForm.isPremium ? '#d97706' : 'var(--text-secondary)' }}>👑 Mark as Premium Job</span>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Premium jobs require detailed company info shown exclusively to premium users</div>
+                    </div>
                   </div>
-                  <div style={{ gridColumn: '1/-1', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <input type="checkbox" checked={jobForm.isPremium || false} onChange={e => setJobForm({ ...jobForm, isPremium: e.target.checked })} style={{ width: '16px', height: '16px', accentColor: 'var(--accent)' }} />
-                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>👑 Mark as Premium Job</span>
-                  </div>
+
+                  {/* Premium-only company details — only shown when isPremium is checked */}
+                  {jobForm.isPremium && (
+                    <>
+                      <div style={{ gridColumn: '1/-1', padding: '12px 16px', background: '#fef3c7', borderRadius: '8px', border: '1px solid #f59e0b', fontSize: '12px', color: '#92400e', fontWeight: '600' }}>
+                        👑 Premium Company Details — these fields are visible ONLY to Premium users on the job page
+                      </div>
+                      {[
+                        { label: 'Company Website', key: 'companyWebsite', ph: 'https://company.com' },
+                        { label: 'Company Size', key: 'companySize', ph: '50-200 employees' },
+                      ].map(f => (
+                        <div key={f.key}>
+                          <label style={labelStyle}>{f.label}</label>
+                          <input style={inputStyle} placeholder={f.ph} value={jobForm[f.key] || ''} onChange={e => setJobForm({ ...jobForm, [f.key]: e.target.value })} />
+                        </div>
+                      ))}
+                      <div style={{ gridColumn: '1/-1' }}>
+                        <label style={labelStyle}>Company Description</label>
+                        <textarea style={{ ...inputStyle, minHeight: '60px', resize: 'vertical' }} placeholder="About the company — exclusive info for premium users..." value={jobForm.companyDescription} onChange={e => setJobForm({ ...jobForm, companyDescription: e.target.value })} />
+                      </div>
+                      <div style={{ gridColumn: '1/-1' }}>
+                        <label style={labelStyle}>Open Positions (comma separated)</label>
+                        <input style={inputStyle} placeholder="Frontend Dev, Backend Dev, UI Designer" value={jobForm.openPositions || ''} onChange={e => setJobForm({ ...jobForm, openPositions: e.target.value })} />
+                      </div>
+                      <div style={{ gridColumn: '1/-1' }}>
+                        <label style={labelStyle}>Work Categories (comma separated)</label>
+                        <input style={inputStyle} placeholder="FinTech, SaaS, E-commerce" value={jobForm.workCategories || ''} onChange={e => setJobForm({ ...jobForm, workCategories: e.target.value })} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Partner Companies (comma separated)</label>
+                        <input style={inputStyle} placeholder="Google, Microsoft, bKash" value={jobForm.partnerCompanies || ''} onChange={e => setJobForm({ ...jobForm, partnerCompanies: e.target.value })} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Global Offices / Branches (comma separated)</label>
+                        <input style={inputStyle} placeholder="Dhaka, Singapore, London" value={jobForm.globalOffices || ''} onChange={e => setJobForm({ ...jobForm, globalOffices: e.target.value })} />
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
                   <button onClick={handleJobSubmit} className="btn-primary" style={{ padding: '10px 24px', fontSize: '14px' }}>

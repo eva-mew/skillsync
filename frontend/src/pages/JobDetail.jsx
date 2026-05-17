@@ -292,16 +292,22 @@ const computedMatchedSkills = job?.requiredSkills?.filter(skill =>
           </div>
         </div>
 
-        {/* Company Info Card — visible to ALL users */}
+        {/* Company Info Card */}
         <div className="card" style={{ padding: '28px', marginBottom: '20px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '20px' }}>
-            🏢 About {job.company}
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
+              🏢 About {job.company}
+            </h3>
+            {isPremiumUser && (
+              <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fef3c7', color: '#d97706', fontSize: '11px', fontWeight: '700' }}>👑 Full Details</span>
+            )}
+          </div>
+
+          {/* Free info — visible to ALL */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px,1fr))', gap: '16px', marginBottom: '20px' }}>
             {[
               { icon: '🏢', label: 'Company', value: job.company },
               { icon: '📍', label: 'Location', value: job.location || 'Bangladesh' },
-              { icon: '👥', label: 'Company Size', value: job.companySize || 'Not specified' },
               { icon: '🌐', label: 'Website', value: job.companyWebsite || 'Not specified', isLink: !!job.companyWebsite },
             ].map((item, i) => (
               <div key={i} style={{ padding: '14px', background: 'var(--bg-secondary)', borderRadius: '10px', border: '1px solid var(--border)' }}>
@@ -317,14 +323,91 @@ const computedMatchedSkills = job?.requiredSkills?.filter(skill =>
               </div>
             ))}
           </div>
-          {job.companyDescription ? (
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.75' }}>
-              {job.companyDescription}
-            </p>
+
+          {/* Premium extra details */}
+          {isPremiumUser ? (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>👑 Premium Company Details</div>
+
+              {/* Size + Description */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px,1fr))', gap: '12px', marginBottom: '16px' }}>
+                {job.companySize && (
+                  <div style={{ padding: '14px', background: 'var(--bg-secondary)', borderRadius: '10px', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: '18px', marginBottom: '6px' }}>👥</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Company Size</div>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{job.companySize}</div>
+                  </div>
+                )}
+              </div>
+
+              {job.companyDescription && (
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.75', marginBottom: '16px', padding: '14px', background: 'var(--bg-secondary)', borderRadius: '10px', border: '1px solid var(--border)' }}>
+                  {job.companyDescription}
+                </p>
+              )}
+
+              {/* Open Positions */}
+              {job.openPositions?.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>💼 Open Positions</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {job.openPositions.map((pos, i) => (
+                      <span key={i} style={{ padding: '5px 12px', borderRadius: '100px', background: 'var(--accent-light)', color: 'var(--accent)', fontSize: '12px', fontWeight: '600', border: '1px solid var(--accent-border)' }}>{pos}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Work Categories */}
+              {job.workCategories?.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>🗂️ What the Company Does</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {job.workCategories.map((cat, i) => (
+                      <span key={i} style={{ padding: '5px 12px', borderRadius: '100px', background: 'var(--green-light)', color: 'var(--green)', fontSize: '12px', fontWeight: '600', border: '1px solid var(--green-border)' }}>{cat}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Partner Companies */}
+              {job.partnerCompanies?.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>🤝 Partner Companies</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {job.partnerCompanies.map((p, i) => (
+                      <span key={i} style={{ padding: '5px 12px', borderRadius: '100px', background: '#f0fdf4', color: '#15803d', fontSize: '12px', fontWeight: '600', border: '1px solid #bbf7d0' }}>{p}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Global Offices */}
+              {job.globalOffices?.length > 0 && (
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>🌍 Global Offices / Branches</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {job.globalOffices.map((office, i) => (
+                      <span key={i} style={{ padding: '5px 12px', borderRadius: '100px', background: '#eff6ff', color: '#1d4ed8', fontSize: '12px', fontWeight: '600', border: '1px solid #bfdbfe' }}>📍 {office}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-              No additional company information provided.
-            </p>
+            /* Non-premium teaser for extra company details */
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '16px', marginBottom: '6px' }}>🔒</div>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: '1.6' }}>
+                Premium members also see <strong>company size, description, open positions, work categories, partner companies</strong> and <strong>global offices</strong>.
+              </p>
+              <button
+                onClick={() => navigate('/premium')}
+                style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', fontWeight: '700', fontSize: '12px', cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+              >
+                👑 Unlock Premium — ৳299/month
+              </button>
+            </div>
           )}
         </div>
 
