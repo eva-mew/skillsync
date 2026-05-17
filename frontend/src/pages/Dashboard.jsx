@@ -117,7 +117,14 @@ const Dashboard = () => {
               ].map(tab => (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => {
+                    setActiveTab(tab.key);
+                    if (tab.key === 'messages' && unreadReplies > 0) {
+                      API.put('/contact/mark-seen').then(() => {
+                        setMessages(msgs => msgs.map(m => ({ ...m, userSeen: true })));
+                      });
+                    }
+                  }}
                   style={{
                     padding: '8px 16px', borderRadius: '8px',  cursor: 'pointer',
                     background: activeTab === tab.key ? 'var(--accent)' : 'var(--surface)',

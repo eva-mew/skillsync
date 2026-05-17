@@ -27,7 +27,6 @@ const getMyMessages = async (req, res) => {
   try {
     const msgs = await ContactMessage.find({
       $or: [{ userId: req.user._id }, { email: req.user.email }],
-      
     }).sort({ createdAt: -1 });
     res.json(msgs);
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -39,7 +38,7 @@ const replyMessage = async (req, res) => {
     if (!reply) return res.status(400).json({ message: 'Reply cannot be empty' });
     const msg = await ContactMessage.findByIdAndUpdate(
       req.params.id,
-      { reply, repliedAt: new Date(), repliedBy: req.user.name, status: 'replied' },
+      { reply, repliedAt: new Date(), repliedBy: req.user.name, status: 'replied', userSeen: false },
       { new: true }
     );
     if (!msg) return res.status(404).json({ message: 'Message not found' });
@@ -51,6 +50,16 @@ const markAsRead = async (req, res) => {
   try {
     await ContactMessage.findByIdAndUpdate(req.params.id, { status: 'read' });
     res.json({ message: 'Marked as read' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const markRepliesSeen = async (req, res) => {
+  try {
+    await ContactMessage.updateMany(
+      { userId: req.user._id, status: 'replied', userSeen: false },
+      { userSeen: true }
+    );
+    res.json({ success: true });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -88,6 +97,6 @@ const deleteSubscriber = async (req, res) => {
 
 module.exports = {
   submitContact, getAllMessages, getMyMessages,
-  replyMessage, markAsRead, deleteMessage,
+  replyMessage, markAsRead, markRepliesSeen, deleteMessage,
   subscribeNewsletter, getSubscribers, deleteSubscriber
 };

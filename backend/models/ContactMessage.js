@@ -13,7 +13,8 @@ const ContactMessageSchema = new mongoose.Schema({
     type: String,
     enum: ['unread', 'read', 'replied'],
     default: 'unread'
-  }
+  },
+  userSeen: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('ContactMessage', ContactMessageSchema);
