@@ -10,6 +10,7 @@ const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [stats, setStats] = useState({});
   const [jobs, setJobs] = useState([]);
+  const [selectedJobId, setSelectedJobId] = useState(null);
   const [startups, setStartups] = useState([]);
   const [users, setUsers] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -452,6 +453,18 @@ const [dateSearched, setDateSearched] = useState(false);
                               <button onClick={() => handleDeleteJob(job._id)} style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #fca5a5', background: '#fee2e2', color: '#dc2626', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
                                 🗑️
                               </button>
+                              <button
+  onClick={() => setSelectedJobId(selectedJobId === job._id ? null : job._id)}
+  style={{
+    padding: '5px 10px', borderRadius: '6px',
+    border: '1px solid var(--accent-border)',
+    background: selectedJobId === job._id ? 'var(--accent)' : 'var(--accent-light)',
+    color: selectedJobId === job._id ? 'white' : 'var(--accent)',
+    fontSize: '11px', cursor: 'pointer', fontWeight: '600'
+  }}
+>
+  👥 {applications.filter(a => String(a.jobId) === String(job._id)).length} CVs
+</button>
                                <button
     onClick={async () => {
       try {
@@ -492,6 +505,90 @@ const [dateSearched, setDateSearched] = useState(false);
                 </table>
               </div>
             </div>
+            {selectedJobId && (
+  <div className="card" style={{ marginTop: '20px', overflow: 'hidden' }}>
+    <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
+        📋 Applicants for: {jobs.find(j => j._id === selectedJobId)?.title}
+      </h3>
+      <button onClick={() => setSelectedJobId(null)} className="btn-ghost" style={{ fontSize: '12px' }}>✕ Close</button>
+    </div>
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+            {['#','Applicant','Email','Match Score','Skills','CV','Status','Action'].map(h => (
+              <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {applications.filter(a => String(a.jobId) === String(selectedJobId)).length === 0 ? (
+            <tr><td colSpan="8" style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>No applications yet for this job</td></tr>
+          ) : (
+            applications
+              .filter(a => String(a.jobId) === String(selectedJobId))
+              .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
+              .map((app, i) => (
+                <tr key={app._id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                  <td style={{ padding: '10px 14px', fontSize: '13px', color: 'var(--text-muted)' }}>{i + 1}</td>
+                  <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{app.applicantName}</td>
+                  <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{app.applicantEmail}</td>
+                  <td style={{ padding: '10px 14px' }}>
+                    <span style={{
+                      padding: '3px 10px', borderRadius: '100px', fontSize: '12px', fontWeight: '700',
+                      background: (app.matchScore||0) >= 70 ? 'var(--green-light)' : 'var(--accent-light)',
+                      color: (app.matchScore||0) >= 70 ? 'var(--green)' : 'var(--accent)'
+                    }}>{app.matchScore || 0}%</span>
+                  </td>
+                  <td style={{ padding: '10px 14px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', maxWidth: '140px' }}>
+                      {(app.skills || []).slice(0, 3).map((s, j) => (
+                        <span key={j} className="skill-tag" style={{ fontSize: '10px', padding: '1px 6px' }}>{s}</span>
+                      ))}
+                    </div>
+                  </td>
+                  <td style={{ padding: '10px 14px' }}>
+                    {app.cvFileName ? (
+                      <button onClick={async () => {
+                        try {
+                          const res = await API.get(`/applications/cv/${app._id}`, { responseType: 'blob' });
+                          const blob = new Blob([res.data], { type: res.headers['content-type'] });
+                          window.open(URL.createObjectURL(blob), '_blank');
+                        } catch (err) { alert('CV not found'); }
+                      }} style={{ padding: '5px 10px', background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid var(--accent-border)', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                        📄 View CV
+                      </button>
+                    ) : <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No CV</span>}
+                  </td>
+                  <td style={{ padding: '10px 14px' }}>
+                    <span style={{
+                      padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: '600',
+                      background: app.status==='selected' ? '#1a7a3a' : app.status==='rejected' ? '#fee2e2' : app.status==='viewed' ? 'var(--accent-light)' : 'var(--orange-light)',
+                      color: app.status==='selected' ? 'white' : app.status==='rejected' ? '#dc2626' : app.status==='viewed' ? 'var(--accent)' : 'var(--orange)',
+                    }}>{app.status}</span>
+                  </td>
+                  <td style={{ padding: '10px 14px' }}>
+                    <select value={app.status} onChange={async (e) => {
+                      try {
+                        await API.put(`/applications/${app._id}/status`, { status: e.target.value });
+                        setApplications(prev => prev.map(a => a._id === app._id ? { ...a, status: e.target.value } : a));
+                      } catch (err) { console.error(err); }
+                    }} style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <option value="pending">Pending</option>
+                      <option value="viewed">Viewed</option>
+                      <option value="selected">Selected</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </td>
+                </tr>
+              ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
           </div>
         )}
 
