@@ -1,28 +1,55 @@
 const User = require('../models/User');
 
-// Smart profile strength calculation
 const calculateStrength = (user) => {
   let score = 0;
 
-  // Skills — 40 points (most important)
-  if (user.skills && user.skills.length >= 5) score += 40;
-  else if (user.skills && user.skills.length >= 3) score += 28;
-  else if (user.skills && user.skills.length >= 1) score += 15;
+  // ── Skills — 40 points ──────────────────────────────────
+  // More skills = more points (diminishing returns after 10)
+  const skillCount = (user.skills || []).length;
+  if      (skillCount >= 10) score += 40;
+  else if (skillCount >= 7)  score += 34;
+  else if (skillCount >= 5)  score += 28;
+  else if (skillCount >= 3)  score += 20;
+  else if (skillCount >= 1)  score += 12;
+  // 0 skills = 0 points
 
-  // Experience — 20 points
-  if (user.experience && user.experience !== '') score += 20;
+  // ── Experience — 20 points (4 levels) ───────────────────
+  const expPoints = {
+    'senior':  20,  // most complete profile indicator
+    'mid':     16,
+    'junior':  12,
+    'fresher': 8,   // still valid, lower weight
+    '':        0,
+  };
+  score += expPoints[user.experience || ''] || 0;
 
-  // Work preference — 15 points
-  if (user.workPreference && user.workPreference !== '') score += 15;
+  // ── Work Preference — 15 points (4 options) ─────────────
+  const workPoints = {
+    'remote':  15,  // specific = clearer profile
+    'onsite':  15,
+    'hybrid':  12,
+    'any':     8,   // any = less defined preference
+    '':        0,
+  };
+  score += workPoints[user.workPreference || ''] || 0;
 
-  // Interests — 15 points
-  if (user.interests && user.interests.length >= 3) score += 15;
-  else if (user.interests && user.interests.length >= 1) score += 8;
+  // ── Interests — 15 points ───────────────────────────────
+  const interestCount = (user.interests || []).length;
+  if      (interestCount >= 5) score += 15;
+  else if (interestCount >= 3) score += 11;
+  else if (interestCount >= 1) score += 6;
 
-  // Budget — 5 points
-  if (user.budget && user.budget !== '') score += 5;
+  // ── Budget — 5 points ───────────────────────────────────
+  const budgetPoints = {
+    'high':   5,
+    'medium': 4,
+    'low':    3,
+    'zero':   2,
+    '':       0,
+  };
+  score += budgetPoints[user.budget || ''] || 0;
 
-  // Name + Email — 5 points (always filled after registration)
+  // ── Name + Email — 5 points (auto on registration) ──────
   if (user.name && user.email) score += 5;
 
   return Math.min(score, 100);

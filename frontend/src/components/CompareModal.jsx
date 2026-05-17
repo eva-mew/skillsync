@@ -9,63 +9,104 @@ const CompareModal = ({ jobs, onClose, onRemove }) => {
  
 
   // ── Detailed Scoring Logic ──────────────────────────────────────
-  const scoreJob = (job) => {
-    if (!job) return { total: 0, breakdown: {} };
+ const scoreJob = (job) => {
+  if (!job) return { total: 0, breakdown: {} };
 
-    const userSkills = (user?.skills || []).map(s => s.toLowerCase());
-    const jobSkills  = (job.requiredSkills || []).map(s => s.toLowerCase());
+  const userSkillsRaw = user?.skills || [];
+  const userSkills = userSkillsRaw.map(s => s.toLowerCase().trim());
+  const jobSkills  = (job.requiredSkills || []).map(s => s.toLowerCase().trim());
 
-    // 1. Skill match — max 40 points
-    const matched = jobSkills.filter(s => userSkills.includes(s));
-    const skillScore = jobSkills.length > 0
-      ? Math.round((matched.length / jobSkills.length) * 40)
-      : 0;
+  // ── 1. Skill match — 40 points ──────────────────────────
+  // Proportional: matched/required × 40
+  const matched = jobSkills.filter(s => userSkills.includes(s));
+  const skillScore = jobSkills.length > 0
+    ? Math.round((matched.length / jobSkills.length) * 40)
+    : 0;
 
-    // 2. Work preference — max 20 points
-    const workPref = user?.workPreference || 'any';
-    let workScore = 0;
-    if (workPref === 'any')                          workScore = 15; // any = flexible, decent
-    else if (workPref === job.workMode)              workScore = 20; // perfect match
-    else if (workPref === 'hybrid')                  workScore = 10; // hybrid = semi-match
-    else                                             workScore = 0;
+  // ── 2. Work preference — 20 points (4 levels) ───────────
+  const workPref = (user?.workPreference || 'any').toLowerCase();
+  const jobMode  = (job.workMode || '').toLowerCase();
+  let workScore = 0;
+  if (workPref === jobMode) {
+    workScore = 20;        // exact match
+  } else if (workPref === 'any') {
+    workScore = 10;        // flexible user — decent everywhere
+  } else if (jobMode === 'hybrid') {
+    workScore = 8;         // hybrid job accepts all types
+  } else if (
+    (workPref === 'remote'  && jobMode === 'hybrid') ||
+    (workPref === 'onsite'  && jobMode === 'hybrid')
+  ) {
+    workScore = 8;         // partial match via hybrid
+  } else {
+    workScore = 0;         // complete mismatch e.g. remote vs onsite
+  }
 
-    // 3. Experience match — max 20 points
-    const expOrder = { fresher: 1, junior: 2, mid: 3, senior: 4 };
-    const userExp  = expOrder[user?.experience] || 1;
-    const jobExp   = expOrder[job.experience]   || 1;
-    const expDiff  = Math.abs(userExp - jobExp);
-    let expScore   = 0;
-    if (expDiff === 0) expScore = 20;
-    else if (expDiff === 1) expScore = 12;
-    else if (expDiff === 2) expScore = 5;
-    else expScore = 0;
+  // ── 3. Experience — 20 points (4 levels) ────────────────
+  const expOrder = { fresher: 1, junior: 2, mid: 3, senior: 4 };
+  const userExpLevel = expOrder[(user?.experience || 'fresher').toLowerCase()] || 1;
+  const jobExpLevel  = expOrder[(job.experience  || 'fresher').toLowerCase()] || 1;
+  const expDiff = Math.abs(userExpLevel - jobExpLevel);
 
-    // 4. Salary — max 10 points (relative, set after both scored)
-    const salaryRaw = parseInt(String(job.salary || '0').replace(/[^0-9]/g, '')) || 0;
+  let expScore = 0;
+  if      (expDiff === 0) expScore = 20;  // exact
+  else if (expDiff === 1) expScore = 13;  // one step off
+  else if (expDiff === 2) expScore = 5;   // two steps off
+  else                    expScore = 0;   // 3 steps = completely wrong level
 
-    // 5. Job type preference — max 10 points
-    // full-time = most stable = highest, internship = lowest
-    const typeScore = {
-      'full-time': 10,
-      'contract': 7,
-      'part-time': 5,
-      'internship': 3,
-    }[job.type] || 5;
-
-    const total = skillScore + workScore + expScore + typeScore; // salary added later
-
-    return {
-      total,
-      salaryRaw,
-      breakdown: {
-        skill:  { score: skillScore,  max: 40, matched: matched.length, total: jobSkills.length },
-        work:   { score: workScore,   max: 20, userPref: workPref, jobMode: job.workMode },
-        exp:    { score: expScore,    max: 20, userExp: user?.experience, jobExp: job.experience },
-        type:   { score: typeScore,   max: 10, jobType: job.type },
-        salary: { score: 0,           max: 10, raw: salaryRaw }, // filled below
-      }
-    };
+  // ── 4. Job type — 10 points (4 types) ───────────────────
+  const typePoints = {
+    'full-time':  10,  // most stable
+    'contract':    7,
+    'part-time':   5,
+    'internship':  3,
   };
+  const typeScore = typePoints[(job.type || '').toLowerCase()] || 5;
+
+  // ── 5. Salary — 10 points (set after both scored) ───────
+  const salaryRaw = parseInt(
+    String(job.salary || '0').replace(/[^0-9]/g, '')
+  ) || 0;
+
+  const subtotal = skillScore + workScore + expScore + typeScore;
+
+  return {
+    total: subtotal, // salary added outside
+    salaryRaw,
+    breakdown: {
+      skill:  {
+        score: skillScore, max: 40,
+        matched: matched.length,
+        total: jobSkills.length,
+        matchedList: matched,
+        label: `${matched.length}/${jobSkills.length} skills matched`
+      },
+      work:   {
+        score: workScore, max: 20,
+        userPref: workPref, jobMode,
+        label: workScore === 20 ? 'Perfect match'
+             : workScore >= 8  ? 'Partial match'
+             : workScore === 10 ? 'Flexible'
+             : 'Mismatch'
+      },
+      exp:    {
+        score: expScore, max: 20,
+        userExp: user?.experience, jobExp: job.experience,
+        diff: expDiff,
+        label: expDiff === 0 ? 'Perfect match'
+             : expDiff === 1 ? '1 level off'
+             : expDiff === 2 ? '2 levels off'
+             : 'Mismatched'
+      },
+      type:   {
+        score: typeScore, max: 10,
+        jobType: job.type,
+        label: job.type
+      },
+      salary: { score: 0, max: 10, raw: salaryRaw },
+    }
+  };
+};
 
   const s1 = scoreJob(job1);
   const s2 = scoreJob(job2);
@@ -84,23 +125,42 @@ const CompareModal = ({ jobs, onClose, onRemove }) => {
   const loserScore  = s1.total >= s2.total ? s2 : s1;
 
   // Build reasons
-  const buildReasons = (ws, ls, job) => {
-    const reasons = [];
-    if (ws.breakdown.skill.score > ls.breakdown.skill.score)
-      reasons.push(`Better skill match (${ws.breakdown.skill.matched}/${ws.breakdown.skill.total} skills)`);
-    if (ws.breakdown.salary.raw > ls.breakdown.salary.raw)
-      reasons.push(`Higher salary (৳${ws.breakdown.salary.raw.toLocaleString()}/mo)`);
-    if (ws.breakdown.work.score > ls.breakdown.work.score)
-      reasons.push(`Better work mode fit (${job.workMode})`);
-    if (ws.breakdown.exp.score > ls.breakdown.exp.score)
-      reasons.push(`Closer experience level (${job.experience})`);
-    if (ws.breakdown.type.score > ls.breakdown.type.score)
-      reasons.push(`More stable job type (${job.type})`);
-    return reasons.length > 0 ? reasons : ['Overall better profile fit'];
-  };
+ const buildReasons = (ws, ls, job, loserJob) => {
+  const reasons = [];
 
-  const winnerReasons = buildReasons(winnerScore, loserScore, winner);
+  // Skill
+  if (ws.breakdown.skill.score > ls.breakdown.skill.score)
+    reasons.push(`Higher skill match — ${ws.breakdown.skill.matched}/${ws.breakdown.skill.total} required skills (vs ${ls.breakdown.skill.matched}/${ls.breakdown.skill.total})`);
 
+  // Salary
+  if (ws.breakdown.salary.raw > ls.breakdown.salary.raw)
+    reasons.push(`Higher salary — ৳${ws.breakdown.salary.raw.toLocaleString()} vs ৳${ls.breakdown.salary.raw.toLocaleString()}/month`);
+
+  // Work mode
+  if (ws.breakdown.work.score > ls.breakdown.work.score)
+    reasons.push(`Better work mode fit — ${job.workMode} (${ws.breakdown.work.label})`);
+
+  // Experience
+  if (ws.breakdown.exp.score > ls.breakdown.exp.score)
+    reasons.push(`Closer experience match — ${job.experience} level (${ws.breakdown.exp.label})`);
+
+  // Job type
+  if (ws.breakdown.type.score > ls.breakdown.type.score)
+    reasons.push(`More stable job type — ${job.type}`);
+
+  // Fallback
+  if (reasons.length === 0)
+    reasons.push(`Overall better profile fit — ${ws.total} points vs ${ls.total} points`);
+
+  return reasons;
+};
+
+  const winnerReasons = buildReasons(
+  winnerScore,
+  loserScore,
+  winner,
+  s1.total >= s2.total ? job2 : job1
+);
   // ── Render helpers ──────────────────────────────────────────────
   const ScoreBar = ({ label, score, max, color }) => (
     <div style={{ marginBottom: '8px' }}>
@@ -185,11 +245,11 @@ const CompareModal = ({ jobs, onClose, onRemove }) => {
 
                 {/* Score breakdown bars */}
                 <div style={{ textAlign: 'left', marginBottom: '10px' }}>
-                  <ScoreBar label="Skills"      score={sc.breakdown.skill.score}  max={40} color={isWinner ? 'var(--green)' : 'var(--accent)'} />
-                  <ScoreBar label="Work Mode"   score={sc.breakdown.work.score}   max={20} color={isWinner ? 'var(--green)' : 'var(--accent)'} />
-                  <ScoreBar label="Experience"  score={sc.breakdown.exp.score}    max={20} color={isWinner ? 'var(--green)' : 'var(--accent)'} />
-                  <ScoreBar label="Salary"      score={sc.breakdown.salary.score} max={10} color={isWinner ? 'var(--green)' : 'var(--accent)'} />
-                  <ScoreBar label="Job Type"    score={sc.breakdown.type.score}   max={10} color={isWinner ? 'var(--green)' : 'var(--accent)'} />
+            <ScoreBar label={`Skills (${sc.breakdown.skill.label})`}     score={sc.breakdown.skill.score}  max={40} color={isWinner ? 'var(--green)' : 'var(--accent)'} />
+<ScoreBar label={`Work Mode (${sc.breakdown.work.label})`}   score={sc.breakdown.work.score}   max={20} color={isWinner ? 'var(--green)' : 'var(--accent)'} />
+<ScoreBar label={`Experience (${sc.breakdown.exp.label})`}   score={sc.breakdown.exp.score}    max={20} color={isWinner ? 'var(--green)' : 'var(--accent)'} />
+<ScoreBar label={`Salary`}                                    score={sc.breakdown.salary.score} max={10} color={isWinner ? 'var(--green)' : 'var(--accent)'} />
+<ScoreBar label={`Job Type (${sc.breakdown.type.label})`}    score={sc.breakdown.type.score}   max={10} color={isWinner ? 'var(--green)' : 'var(--accent)'} />
                 </div>
 
                 <div style={{
