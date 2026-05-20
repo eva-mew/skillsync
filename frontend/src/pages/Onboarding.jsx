@@ -53,9 +53,8 @@ const getSteps = (type) => {
   }
   if (type === 'startup') {
     return [
-      { key: 'type',     label: '🔍 Looking For' },
-      { key: 'goals',    label: '🎯 Goals' },
-      { key: 'skills',   label: '🧠 Skills' },
+      { key: 'type',  label: '🔍 Looking For' },
+      { key: 'goals', label: '🎯 Goals' },
     ];
   }
   // both or not yet selected
@@ -79,7 +78,7 @@ const getStepTitle = (stepKey, type) => {
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -133,10 +132,15 @@ const Onboarding = () => {
     setLoading(true);
     try {
       await API.put('/profile', { ...form });
+      // Refresh user in AuthContext so onboardingType is up-to-date
+      const profileRes = await API.get('/profile');
+      if (setUser) {
+        setUser(prev => ({ ...prev, ...profileRes.data }));
+      }
       if (user.role === 'admin') {
         navigate('/admin');
       } else if (form.onboardingType === 'startup') {
-        navigate('/startup');
+        navigate('/startups');
       } else {
         navigate('/jobs');
       }

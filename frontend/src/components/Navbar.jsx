@@ -61,12 +61,16 @@ const Navbar = () => {
     const base = [
       { icon: '📊', label: 'Dashboard',  path: '/dashboard' },
       { icon: '👤', label: 'My Profile', path: '/profile' },
-      { icon: '👑', label: 'Go Premium', path: '/premium' },
     ];
 
     // My Applications only relevant for job seekers
     if (type === 'job' || type === 'both') {
       base.splice(1, 0, { icon: '📋', label: 'My Applications', path: '/applications' });
+    }
+
+    // Go Premium only for job seekers and both (not pure startup builders)
+    if (type !== 'startup') {
+      base.push({ icon: '👑', label: 'Go Premium', path: '/premium' });
     }
 
     return base;

@@ -19,24 +19,24 @@ export const AuthProvider = ({ children }) => {
 
   // LOGIN
   const login = (userData, userToken) => {
-
-    // Save complete user data
     const fullUser = { ...userData };
 
     setUser(fullUser);
     setToken(userToken);
 
-    localStorage.setItem(
-      'skillsync_user',
-      JSON.stringify(fullUser)
-    );
-
-    localStorage.setItem(
-      'skillsync_token',
-      userToken
-    );
+    localStorage.setItem('skillsync_user', JSON.stringify(fullUser));
+    localStorage.setItem('skillsync_token', userToken);
 
     console.log("LOGIN USER:", fullUser);
+  };
+
+  // UPDATE USER — merges partial data and persists to localStorage
+  const updateUser = (partialData) => {
+    setUser(prev => {
+      const updated = { ...prev, ...partialData };
+      localStorage.setItem('skillsync_user', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   // LOGOUT
@@ -52,9 +52,11 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        setUser,
         token,
         login,
         logout,
+        updateUser,
         loading
       }}
     >

@@ -147,7 +147,8 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Skills */}
+        {/* Skills — only for job seekers and both */}
+        {form.onboardingType !== 'startup' && (
         <div className="card" style={{ padding: '24px', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>
             🧠 Technical Skills
@@ -174,6 +175,7 @@ const Profile = () => {
             ))}
           </div>
         </div>
+        )}
 
         {/* Experience */}
         <div className="card" style={{ padding: '24px', marginBottom: '16px' }}>

@@ -13,7 +13,9 @@ const Dashboard = () => {
   const [messages, setMessages] = useState([]);
   const [stats, setStats] = useState({ jobs: 0, startups: 0 });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('saved');
+  const [activeTab, setActiveTab] = useState(
+    user?.onboardingType === 'startup' ? 'startups' : 'saved'
+  );
 
   // eslint-disable-next-line
   useEffect(() => {
@@ -26,13 +28,16 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [profileRes, savedRes, appsRes, jobsRes, startupsRes] = await Promise.all([
+      const type = user?.onboardingType;
+      const [profileRes, savedRes, appsRes] = await Promise.all([
         API.get('/profile'),
         API.get('/saved'),
-        API.get('/applications/my'),
-        API.get('/recommend/jobs').catch(() => ({ data: [] })),
-        API.get('/recommend/startups').catch(() => ({ data: [] })),
+        type !== 'startup' ? API.get('/applications/my') : Promise.resolve({ data: [] }),
       ]);
+
+      const jobsRes   = type !== 'startup' ? await API.get('/recommend/jobs').catch(() => ({ data: [] }))   : { data: [] };
+      const startupsRes = type !== 'job'   ? await API.get('/recommend/startups').catch(() => ({ data: [] })) : { data: [] };
+
       setProfile(profileRes.data);
       setSaved(savedRes.data);
       setApplications(appsRes.data);
@@ -87,34 +92,40 @@ const Dashboard = () => {
           <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Here's your career intelligence dashboard</p>
         </div>
 
-        {/* Stats Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '14px', marginBottom: '24px' }}>
-          {[
-            { num: stats.jobs, label: 'Jobs Matched', color: 'var(--accent)', icon: '💼' },
-            { num: stats.startups, label: 'Startup Ideas', color: 'var(--green)', icon: '💡' },
-            { num: savedJobs.length, label: 'Jobs Saved', color: '#7c3aed', icon: '🔖' },
-            { num: savedStartups.length, label: 'Ideas Saved', color: 'var(--orange)', icon: '⭐' }
-          ].map((s, i) => (
-            <div key={i} className="card" style={{ padding: '18px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.4rem', marginBottom: '8px' }}>{s.icon}</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: s.color }}>{s.num}</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{s.label}</div>
+        {/* Stats Cards — filtered by onboardingType */}
+        {(() => {
+          const type = user?.onboardingType;
+          const allStats = [
+            { num: stats.jobs,          label: 'Jobs Matched', color: 'var(--accent)',  icon: '💼', show: type !== 'startup' },
+            { num: stats.startups,      label: 'Startup Ideas', color: 'var(--green)', icon: '💡', show: type !== 'job' },
+            { num: savedJobs.length,    label: 'Jobs Saved',   color: '#7c3aed',        icon: '🔖', show: type !== 'startup' },
+            { num: savedStartups.length,label: 'Ideas Saved',  color: 'var(--orange)', icon: '⭐', show: type !== 'job' },
+          ].filter(s => s.show);
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${allStats.length},1fr)`, gap: '14px', marginBottom: '24px' }}>
+              {allStats.map((s, i) => (
+                <div key={i} className="card" style={{ padding: '18px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', marginBottom: '8px' }}>{s.icon}</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: '800', color: s.color }}>{s.num}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{s.label}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
 
           {/* LEFT COLUMN */}
           <div>
-            {/* Tabs */}
+            {/* Tabs — filtered by onboardingType */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
               {[
-                { key: 'saved', label: '🔖 Saved Jobs', count: savedJobs.length },
-                { key: 'startups', label: '💡 Saved Ideas', count: savedStartups.length },
-                { key: 'applications', label: '📋 Applications', count: applications.length },
-                { key: 'messages', label: '📬 Messages', count: messages.length, badge: unreadReplies },
-              ].map(tab => (
+                { key: 'saved',        label: '🔖 Saved Jobs',   count: savedJobs.length,     show: user?.onboardingType !== 'startup' },
+                { key: 'startups',     label: '💡 Saved Ideas',  count: savedStartups.length, show: user?.onboardingType !== 'job' },
+                { key: 'applications', label: '📋 Applications', count: applications.length,  show: user?.onboardingType !== 'startup' },
+                { key: 'messages',     label: '📬 Messages',     count: messages.length,      show: true, badge: unreadReplies },
+              ].filter(tab => tab.show).map(tab => (
                 <button
                   key={tab.key}
                   onClick={() => {
@@ -386,10 +397,12 @@ const Dashboard = () => {
                 <button onClick={() => navigate('/profile')} className="btn-primary" style={{ padding: '9px', fontSize: '13px', justifyContent: 'center' }}>
                   ✏️ Edit Profile
                 </button>
-                <button onClick={() => navigate('/applications')} className="btn-secondary" style={{ padding: '9px', fontSize: '13px', justifyContent: 'center' }}>
-                  📋 My Applications
-                </button>
-                {!user?.isPremium && (
+                {user?.onboardingType !== 'startup' && (
+                  <button onClick={() => navigate('/applications')} className="btn-secondary" style={{ padding: '9px', fontSize: '13px', justifyContent: 'center' }}>
+                    📋 My Applications
+                  </button>
+                )}
+                {!user?.isPremium && user?.onboardingType !== 'startup' && (
                   <button onClick={() => navigate('/premium')} style={{ padding: '9px', fontSize: '13px', background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontFamily: 'inherit' }}>
                     👑 Go Premium
                   </button>
@@ -401,11 +414,11 @@ const Dashboard = () => {
             <div className="card" style={{ padding: '20px' }}>
               <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '12px' }}>🔗 Quick Links</h3>
               {[
-                { label: '💼 Browse Jobs', path: '/jobs' },
-                { label: '💡 Startup Ideas', path: '/startups' },
-                { label: '✏️ Edit Profile', path: '/profile' },
-                { label: '📬 Contact Support', path: '/contact' },
-              ].map((link, i) => (
+                { label: '💼 Browse Jobs',    path: '/jobs',     show: user?.onboardingType !== 'startup' },
+                { label: '💡 Startup Ideas',  path: '/startups', show: user?.onboardingType !== 'job' },
+                { label: '✏️ Edit Profile',   path: '/profile',  show: true },
+                { label: '📬 Contact Support', path: '/contact', show: true },
+              ].filter(l => l.show).map((link, i) => (
                 <button
                   key={i}
                   onClick={() => navigate(link.path)}
