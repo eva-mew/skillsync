@@ -207,33 +207,41 @@ const Profile = () => {
         </div>
 
         {/* Interests */}
-        <div className="card" style={{ padding: '24px', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>
-            💡 Startup Interests
-            <span style={{ fontSize: '13px', fontWeight: '400', color: 'var(--text-muted)', marginLeft: '8px' }}>
-              ({form.interests.length} selected)
-            </span>
-          </h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {allInterests.map(interest => (
-              <button
-                key={interest}
-                onClick={() => toggleInterest(interest)}
-                style={{
-                  padding: '7px 14px', borderRadius: '100px', border: '1px solid',
-                  borderColor: form.interests.includes(interest) ? 'var(--accent)' : 'var(--border2)',
-                  background: form.interests.includes(interest) ? 'var(--accent-light)' : 'transparent',
-                  color: form.interests.includes(interest) ? 'var(--accent)' : 'var(--text-secondary)',
-                  fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
-                  fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: '500'
-                }}
-              >
-                {form.interests.includes(interest) ? '✓ ' : ''}{interest}
-              </button>
-            ))}
-          </div>
-        </div>
+       {/* Interests */}
+{form.onboardingType !== 'job' && (
+  <div className="card" style={{ padding: '24px', marginBottom: '16px' }}>
+    <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>
+      💡 Startup Interests
+      <span style={{ fontSize: '13px', fontWeight: '400', color: 'var(--text-muted)', marginLeft: '8px' }}>
+        ({form.interests.length} selected)
+      </span>
+    </h3>
 
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+      {allInterests.map(interest => (
+        <button
+          key={interest}
+          onClick={() => toggleInterest(interest)}
+          style={{
+            padding: '7px 14px',
+            borderRadius: '100px',
+            border: '1px solid',
+            borderColor: form.interests.includes(interest) ? 'var(--accent)' : 'var(--border2)',
+            background: form.interests.includes(interest) ? 'var(--accent-light)' : 'transparent',
+            color: form.interests.includes(interest) ? 'var(--accent)' : 'var(--text-secondary)',
+            fontSize: '13px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            fontWeight: '500'
+          }}
+        >
+          {form.interests.includes(interest) ? '✓ ' : ''}{interest}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
         {/* Preferences */}
         <div className="card" style={{ padding: '24px', marginBottom: '24px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>
@@ -268,34 +276,41 @@ const Profile = () => {
                 ))}
               </div>
             </div>
-            <div>
-              <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '10px' }}>
-                Startup Budget
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                {[
-                  { val: 'zero', icon: '🪙', label: '$0' },
-                  { val: 'low', icon: '💵', label: '$100-1k' },
-                  { val: 'medium', icon: '💳', label: '$1k-10k' },
-                  { val: 'high', icon: '🏦', label: '$10k+' }
-                ].map(opt => (
-                  <button
-                    key={opt.val}
-                    onClick={() => setForm({ ...form, budget: opt.val })}
-                    style={{
-                      padding: '10px', borderRadius: '8px', border: '1px solid',
-                      borderColor: form.budget === opt.val ? 'var(--accent)' : 'var(--border)',
-                      background: form.budget === opt.val ? 'var(--accent-light)' : 'var(--surface2)',
-                      cursor: 'pointer', transition: 'all 0.2s',
-                      fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '13px',
-                      color: form.budget === opt.val ? 'var(--accent)' : 'var(--text-secondary)'
-                    }}
-                  >
-                    {opt.icon} {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {form.onboardingType !== 'job' && (
+  <div>
+    <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '10px' }}>
+      Startup Budget
+    </label>
+
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+      {[
+        { val: 'zero', icon: '🪙', label: '$0' },
+        { val: 'low', icon: '💵', label: '$100-1k' },
+        { val: 'medium', icon: '💳', label: '$1k-10k' },
+        { val: 'high', icon: '🏦', label: '$10k+' }
+      ].map(opt => (
+        <button
+          key={opt.val}
+          onClick={() => setForm({ ...form, budget: opt.val })}
+          style={{
+            padding: '10px',
+            borderRadius: '8px',
+            border: '1px solid',
+            borderColor: form.budget === opt.val ? 'var(--accent)' : 'var(--border)',
+            background: form.budget === opt.val ? 'var(--accent-light)' : 'var(--surface2)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            fontSize: '13px',
+            color: form.budget === opt.val ? 'var(--accent)' : 'var(--text-secondary)'
+          }}
+        >
+          {opt.icon} {opt.label}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
           </div>
         </div>
 
