@@ -1575,9 +1575,6 @@ try {
     </button>
   </div>
 </div>
-      <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>👑 Premium Users</h2>
-      <span className="badge badge-blue">{premiumUsers.length} premium members</span>
-    </div>
 
     {premiumUsers.length === 0 ? (
       <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>No premium users yet</div>
