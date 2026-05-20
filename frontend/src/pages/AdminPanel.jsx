@@ -927,18 +927,8 @@ try {
     <option value="selected">🏆 Selected</option>
     <option value="rejected">❌ Rejected</option>
   </select>
-  <button
-    onClick={async () => {
-      if (!window.confirm('Delete this application permanently?')) return;
-      try {
-        await API.delete(`/applications/${app._id}`);
-        setApplications(prev => prev.filter(a => a._id !== app._id));
-        setSuccess('Application deleted!');
-        setTimeout(() => setSuccess(''), 2500);
-      } catch (err) { console.error(err); }
-    }}
-    style={{ padding:'5px 8px', background:'#fef2f2', color:'#dc2626', border:'1px solid #fecaca', borderRadius:'6px', cursor:'pointer', fontSize:'11px', marginLeft:'6px' }}
-  >🗑️</button>
+  
+  
 </td>
 
      
@@ -1311,14 +1301,16 @@ try {
 {activeTab === 'cv-applications' && (
   <div>
     <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '20px' }}>
-      📄 CV Applications — Per Job
+      📄 CV Applications — Per Company
     </h2>
+
     {cvApplications.length === 0 ? (
       <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
         No applications yet
       </div>
     ) : cvApplications.map((jobData) => (
       <div key={jobData.jobId} className="card" style={{ marginBottom: '16px', overflow: 'hidden' }}>
+
         {/* Job Header */}
         <div
           onClick={() => setSelectedCVJob(selectedCVJob === jobData.jobId ? null : jobData.jobId)}
@@ -1338,6 +1330,7 @@ try {
             }}>
               {jobData.company?.charAt(0)}
             </div>
+
             <div>
               <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
                 {jobData.title}
@@ -1347,7 +1340,47 @@ try {
               <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{jobData.company}</div>
             </div>
           </div>
+
+          {/* RIGHT SIDE */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+
+            {/* CSV DOWNLOAD BUTTON */}
+            {jobData.totalApplications > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+
+                  downloadCSV(
+                    jobData.applications,
+                    `CV_${jobData.title.replace(/\s+/g, '_')}_${jobData.company}`,
+                    ['Applicant', 'Email', 'Job', 'Company', 'Match Score', 'Skills', 'Status', 'Applied Date'],
+                    a => [
+                      a.applicantName,
+                      a.applicantEmail,
+                      jobData.title,
+                      jobData.company,
+                      a.matchScore || 0,
+                      (a.skills || []).join(' | '),
+                      a.status,
+                      new Date(a.appliedAt).toLocaleDateString()
+                    ]
+                  );
+                }}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                📥 CSV
+              </button>
+            )}
+
             <span style={{
               padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '700',
               background: jobData.totalApplications > 0 ? 'var(--accent-light)' : 'var(--bg-secondary)',
@@ -1355,46 +1388,73 @@ try {
             }}>
               {jobData.totalApplications} CV{jobData.totalApplications !== 1 ? 's' : ''}
             </span>
+
             <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
               {selectedCVJob === jobData.jobId ? '▲' : '▼'}
             </span>
           </div>
         </div>
 
-        {/* Applicants List */}
+        {/* Applicants Table */}
         {selectedCVJob === jobData.jobId && (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-                  {['#', 'Applicant', 'Email', 'Match Score', 'Skills', 'CV', 'Status', 'Action'].map(h => (
-                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                  {['#', 'Applicant', 'Email', 'Job Applied', 'Match Score', 'Skills', 'CV', 'Status', 'Action'].map(h => (
+                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
+
               <tbody>
                 {jobData.applications.map((app, i) => (
                   <tr key={app._id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+
                     <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>{i + 1}</td>
-                    <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{app.applicantName}</td>
-                    <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{app.applicantEmail}</td>
+
+                    <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                      {app.applicantName}
+                    </td>
+
+                    {/* EMAIL */}
+                    <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      {app.applicantEmail}
+                    </td>
+
+                    {/* NEW JOB COLUMN (INSERTED AFTER EMAIL) */}
+                    <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                      {jobData.title}
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '400' }}>
+                        {jobData.company}
+                      </div>
+                    </td>
+
+                    {/* MATCH SCORE */}
                     <td style={{ padding: '10px 14px' }}>
                       <span style={{
                         padding: '3px 10px', borderRadius: '100px', fontSize: '12px', fontWeight: '700',
-                        background: (app.matchScore || 0) >= 70 ? 'var(--green-light)' : (app.matchScore || 0) >= 40 ? 'var(--orange-light)' : '#fef2f2',
-                        color: (app.matchScore || 0) >= 70 ? 'var(--green)' : (app.matchScore || 0) >= 40 ? 'var(--orange)' : '#dc2626'
+                        background: (app.matchScore || 0) >= 70 ? 'var(--green-light)' : 'var(--accent-light)',
+                        color: (app.matchScore || 0) >= 70 ? 'var(--green)' : 'var(--accent)'
                       }}>
                         {app.matchScore || 0}%
                       </span>
                     </td>
+
+                    {/* SKILLS */}
                     <td style={{ padding: '10px 14px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', maxWidth: '140px' }}>
                         {(app.skills || []).slice(0, 2).map((s, j) => (
-                          <span key={j} className="skill-tag" style={{ fontSize: '10px', padding: '1px 6px' }}>{s}</span>
+                          <span key={j} className="skill-tag" style={{ fontSize: '10px', padding: '1px 6px' }}>
+                            {s}
+                          </span>
                         ))}
-                        {(app.skills || []).length > 2 && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>+{app.skills.length - 2}</span>}
                       </div>
                     </td>
+
+                    {/* CV */}
                     <td style={{ padding: '10px 14px' }}>
                       {app.cvFileName ? (
                         <button onClick={async () => {
@@ -1402,36 +1462,71 @@ try {
                             const res = await API.get(`/applications/cv/${app._id}`, { responseType: 'blob' });
                             const blob = new Blob([res.data], { type: res.headers['content-type'] });
                             window.open(URL.createObjectURL(blob), '_blank');
-                          } catch (err) { alert('CV not found'); }
-                        }} style={{ padding: '5px 10px', background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid var(--accent-border)', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                          } catch {
+                            alert('CV not found');
+                          }
+                        }}
+                          style={{
+                            padding: '5px 10px',
+                            background: 'var(--accent-light)',
+                            color: 'var(--accent)',
+                            border: '1px solid var(--accent-border)',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                          }}>
                           📄 View CV
                         </button>
                       ) : <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No CV</span>}
                     </td>
+
+                    {/* STATUS */}
                     <td style={{ padding: '10px 14px' }}>
                       <span style={{
-                        padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: '600',
-                        background: app.status === 'selected' ? '#1a7a3a' : app.status === 'rejected' ? '#fee2e2' : app.status === 'viewed' ? 'var(--accent-light)' : 'var(--orange-light)',
-                        color: app.status === 'selected' ? 'white' : app.status === 'rejected' ? '#dc2626' : app.status === 'viewed' ? 'var(--accent)' : 'var(--orange)',
-                      }}>{app.status}</span>
+                        padding: '3px 10px',
+                        borderRadius: '100px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        background:
+                          app.status === 'selected' ? '#1a7a3a' :
+                          app.status === 'rejected' ? '#fee2e2' :
+                          app.status === 'viewed' ? 'var(--accent-light)' : 'var(--orange-light)',
+                        color:
+                          app.status === 'selected' ? 'white' :
+                          app.status === 'rejected' ? '#dc2626' :
+                          app.status === 'viewed' ? 'var(--accent)' : 'var(--orange)'
+                      }}>
+                        {app.status}
+                      </span>
                     </td>
+
+                    {/* ACTION */}
                     <td style={{ padding: '10px 14px' }}>
-                      <select value={app.status} onChange={async (e) => {
-                        try {
-                          await API.put(`/applications/${app._id}/status`, { status: e.target.value });
-                          setCvApplications(prev => prev.map(j =>
-                            j.jobId === jobData.jobId
-                              ? { ...j, applications: j.applications.map(a => a._id === app._id ? { ...a, status: e.target.value } : a) }
-                              : j
-                          ));
-                        } catch (err) { console.error(err); }
-                      }} style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <select
+                        value={app.status}
+                        onChange={async (e) => {
+                          try {
+                            await API.put(`/applications/${app._id}/status`, { status: e.target.value });
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border)',
+                          background: 'var(--surface)',
+                          fontSize: '12px'
+                        }}
+                      >
                         <option value="pending">Pending</option>
                         <option value="viewed">Viewed</option>
                         <option value="selected">Selected</option>
                         <option value="rejected">Rejected</option>
                       </select>
                     </td>
+
                   </tr>
                 ))}
               </tbody>
