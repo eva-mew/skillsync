@@ -37,15 +37,16 @@ const register = async (req, res) => {
   name: user.name,
   email: user.email,
   role: user.role,
-
-  // ADD THESE
+  onboardingType: user.onboardingType,
   skills: user.skills,
   experience: user.experience,
   interests: user.interests,
   budget: user.budget,
   workPreference: user.workPreference,
   profileComplete: user.profileComplete,
-
+  isPremium: user.isPremium,
+  premiumPlan: user.premiumPlan,
+  premiumExpiresAt: user.premiumExpiresAt,
   token: generateToken(user._id)
 });
 
@@ -83,15 +84,16 @@ const login = async (req, res) => {
   name: user.name,
   email: user.email,
   role: user.role,
-
-  // ADD THESE
+  onboardingType: user.onboardingType,
   skills: user.skills,
   experience: user.experience,
   interests: user.interests,
   budget: user.budget,
   workPreference: user.workPreference,
   profileComplete: user.profileComplete,
-
+  isPremium: user.isPremium,
+  premiumPlan: user.premiumPlan,
+  premiumExpiresAt: user.premiumExpiresAt,
   token: generateToken(user._id)
 });
 
@@ -101,4 +103,31 @@ const login = async (req, res) => {
 };
 
 
-module.exports = { register, login };
+
+// @route  GET /api/auth/me
+// @access Private
+const getMe = async (req, res) => {
+  try {
+    const user = req.user; // set by protect middleware
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      onboardingType: user.onboardingType,
+      skills: user.skills,
+      experience: user.experience,
+      interests: user.interests,
+      budget: user.budget,
+      workPreference: user.workPreference,
+      profileComplete: user.profileComplete,
+      isPremium: user.isPremium,
+      premiumPlan: user.premiumPlan,
+      premiumExpiresAt: user.premiumExpiresAt,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { register, login, getMe };
