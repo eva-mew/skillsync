@@ -19,20 +19,21 @@ const [showCompare, setShowCompare] = useState(false);
   }, [mode]);
 
   const fetchStartups = async () => {
-    setLoading(true);
-    try {
-      let res;
-      if (mode === 'recommended') {
-        res = await API.get('/recommend/startups');
-      } else {
-        res = await API.get('/startups');
-      }
-      setStartups(res.data);
-    } catch (err) {
-      console.error(err);
+  setLoading(true);
+  try {
+    let res;
+    if (mode === 'recommended') {
+      res = await API.get('/recommend/startups');
+      console.log('RECOMMEND RESPONSE:', res.data); 
+    } else {
+      res = await API.get('/startups');
     }
-    setLoading(false);
-  };
+    setStartups(res.data);
+  } catch (err) {
+    console.error('RECOMMEND ERROR:', err.response?.data); 
+  }
+  setLoading(false);
+};
 
   const filtered = startups.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(search.toLowerCase());

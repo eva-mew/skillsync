@@ -128,28 +128,34 @@ const Onboarding = () => {
     setStep(1);
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      await API.put('/profile', { ...form });
-      // Refresh user in AuthContext so onboardingType is up-to-date
-      const profileRes = await API.get('/profile');
-      if (setUser) {
-        setUser(prev => ({ ...prev, ...profileRes.data }));
-      }
-      if (user.role === 'admin') {
-        navigate('/admin');
-      } else if (form.onboardingType === 'startup') {
-        navigate('/startups');
-      } else {
-        navigate('/jobs');
-      }
-    } catch (err) {
-      console.error(err);
-    }
-    setLoading(false);
-  };
+const handleSubmit = async () => {
+  setLoading(true);
+  try {
+    await API.put('/profile', { ...form });
+    const profileRes = await API.get('/profile');
+    
+    const updated = { 
+      ...JSON.parse(localStorage.getItem('skillsync_user')), 
+      ...profileRes.data 
+    };
+    
+    // localStorage সরাসরি update করো
+    localStorage.setItem('skillsync_user', JSON.stringify(updated));
+    
+    if (setUser) setUser(updated);
 
+    if (updated.role === 'admin') {
+      navigate('/admin');
+    } else if (form.onboardingType === 'startup') {
+      navigate('/startups');
+    } else {
+      navigate('/jobs');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  setLoading(false);
+};
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-secondary)' }}>
       <Navbar />

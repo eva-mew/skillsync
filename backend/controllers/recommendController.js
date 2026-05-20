@@ -2,22 +2,39 @@ const Job = require('../models/Job');
 const Startup = require('../models/Startup');
 const User = require('../models/User');
 
-// MATCH SCORE ALGORITHM
+// =========================
+// HELPER: normalize text
+// =========================
+const normalize = (str = '') =>
+  str
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+
+
+// =========================
+// JOB MATCH SCORE
+// =========================
 const getJobMatchScore = (user, job) => {
   let score = 0;
 
+  const userSkills = (user.skills || []).map(s => normalize(s));
+  const jobSkills = job.requiredSkills || [];
+
   // Skill match — 70 points
-  if (job.requiredSkills.length > 0) {
-    const matched = job.requiredSkills
-      .filter(skill => user.skills
-      .map(s => s.toLowerCase())
-      .includes(skill.toLowerCase())).length;
-    score += (matched / job.requiredSkills.length) * 70;
+  if (jobSkills.length > 0) {
+    const matched = jobSkills.filter(skill =>
+      userSkills.includes(normalize(skill))
+    ).length;
+
+    score += (matched / jobSkills.length) * 70;
   }
 
   // Work mode match — 20 points
-  if (user.workPreference === job.workMode ||
-      user.workPreference === 'any') {
+  if (
+    user.workPreference === job.workMode ||
+    user.workPreference === 'any'
+  ) {
     score += 20;
   }
 
@@ -29,110 +46,158 @@ const getJobMatchScore = (user, job) => {
   return Math.round(score);
 };
 
+
+// =========================
+// STARTUP MATCH SCORE
+// =========================
 const getStartupMatchScore = (user, startup) => {
   let score = 0;
 
-  // Skill match — 40 points
-  if (startup.requiredSkills.length > 0) {
-    const matched = startup.requiredSkills
-      .filter(skill => user.skills
-      .map(s => s.toLowerCase())
-      .includes(skill.toLowerCase())).length;
-    score += (matched / startup.requiredSkills.length) * 40;
+  const userSkills = (user.skills || []).map(s => normalize(s));
+  const userInterests = (user.interests || []).map(i => normalize(i));
+
+  const startupSkills = (startup.requiredSkills || []).map(s => normalize(s));
+  const startupTags = (startup.tags || []).map(t => normalize(t));
+  const startupCategory = normalize(startup.category);
+
+  // =========================
+  // 1. Skill match (40)
+  // =========================
+  const skillMatched = startupSkills.filter(skill =>
+    userSkills.includes(skill)
+  ).length;
+
+  if (startupSkills.length > 0) {
+    score += (skillMatched / startupSkills.length) * 40;
   }
 
-  // Interest/category match — 30 points
-  if (user.interests
-      .map(i => i.toLowerCase())
-      .includes(startup.category?.toLowerCase())) {
-    score += 30;
+  // =========================
+  // 2. Interest match (40)
+  // =========================
+  const allStartupTopics = [
+    ...startupTags,
+    startupCategory
+  ].filter(Boolean);
+
+  const interestMatched = allStartupTopics.some(topic =>
+    userInterests.some(userInterest =>
+      topic.includes(userInterest) ||
+      userInterest.includes(topic)
+    )
+  );
+
+  if (interestMatched) {
+    score += 40;
   }
 
-  // Budget match — 30 points
-  if (startup.budget === user.budget || user.budget === 'high') {
-    score += 30;
+  // =========================
+  // 3. Budget match (20)
+  // =========================
+  if (
+    startup.budget === user.budget ||
+    user.budget === 'high'
+  ) {
+    score += 20;
   }
 
   return Math.round(score);
 };
 
+
+// =========================
+// GET RECOMMENDED JOBS
+// =========================
 const getRecommendedJobs = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
     if (!user.skills || user.skills.length === 0) {
-      return res.status(400).json({ message: 'Please complete your profile first' });
+      return res.status(400).json({
+        message: 'Please complete your profile first'
+      });
     }
 
-    // Get ALL jobs including premium
     const jobs = await Job.find({});
 
     const scored = jobs.map(job => {
       const jobObj = job.toObject();
-      const required = job.requiredSkills || [];
-      const matched = required.filter(s => user.skills.includes(s));
 
-      const skillScore = required.length > 0 ? (matched.length / required.length) * 70 : 0;
-      const modeScore = user.workPreference === job.workMode ? 20 : 0;
-      const expScore = user.experience === job.experience ? 10 : 0;
-      const matchScore = Math.round(skillScore + modeScore + expScore);
+      const matched = (job.requiredSkills || []).filter(skill =>
+        (user.skills || [])
+          .map(s => normalize(s))
+          .includes(normalize(skill))
+      );
 
-      // Premium jobs visible to ALL but marked as locked for non-premium
-      if (job.isPremium && !user.isPremium) {
-        return {
-          ...jobObj,
-          matchScore,
-          matchedSkills: matched,
-          locked: true  // frontend uses this to show upgrade button
-        };
-      }
+      const matchScore = getJobMatchScore(user, job);
 
       return {
         ...jobObj,
         matchScore,
         matchedSkills: matched,
-        locked: false
+        locked: job.isPremium && !user.isPremium
       };
     });
 
     const sorted = scored.sort((a, b) => b.matchScore - a.matchScore);
+
     res.json(sorted);
 
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message
+    });
   }
 };
-// @route  GET /api/recommend/startups
-// @access Private
+
+
+// =========================
+// GET RECOMMENDED STARTUPS
+// =========================
 const getRecommendedStartups = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
-    if (!user.skills || user.skills.length === 0) {
-      return res.status(400).json({
-        message: 'Please complete your profile first to get recommendations'
-      });
-    }
-
     const startups = await Startup.find({});
 
-    // Score all startups
-    const scoredStartups = startups.map(startup => ({
-      ...startup._doc,
-      matchScore: getStartupMatchScore(user, startup),
-      matchedSkills: startup.requiredSkills.filter(skill =>
-        user.skills.map(s => s.toLowerCase())
-        .includes(skill.toLowerCase()))
-    }));
+    console.log('Total startups:', startups.length);
 
-    // Sort by score — highest first
-    const sorted = scoredStartups
-      .sort((a, b) => b.matchScore - a.matchScore);
+    const scoredStartups = startups.map(startup => {
+      const matchScore = getStartupMatchScore(user, startup);
+
+      console.log({
+        userInterests: user.interests,
+        startupCategory: startup.category,
+        startupTags: startup.tags,
+        matchScore
+      });
+
+      return {
+        ...startup.toObject(),
+        matchScore,
+
+        matchedSkills: (startup.requiredSkills || []).filter(skill =>
+          (user.skills || [])
+            .map(s => normalize(s))
+            .includes(normalize(skill))
+        )
+      };
+    });
+
+    const sorted = scoredStartups.sort(
+      (a, b) => b.matchScore - a.matchScore
+    );
 
     res.json(sorted);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+
+  } catch (err) {
+    res.status(500).json({
+      message: err.message
+    });
   }
 };
 
-module.exports = { getRecommendedJobs, getRecommendedStartups };
+
+module.exports = {
+  getRecommendedJobs,
+  getRecommendedStartups
+};
