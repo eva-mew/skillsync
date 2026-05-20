@@ -142,6 +142,7 @@ const postJob = async (req, res) => {
     });
   }
 };
+// GET /api/admin/revenue
 const getRevenueReport = async (req, res) => {
   try {
     const data = await Payment.aggregate([
@@ -161,6 +162,56 @@ const getRevenueReport = async (req, res) => {
       revenue: d.totalRevenue,
       subscribers: d.totalSubscribers
     })));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+// GET /api/admin/premium-users
+const getPremiumUsers = async (req, res) => {
+  try {
+    const users = await User.find({ isPremium: true }).select('-password').sort({ premiumExpiresAt: 1 });
+    const report = await Promise.all(users.map(async (user) => {
+      const apps = await Application.find({ userId: user._id })
+        .select('jobTitle company status appliedAt matchScore cvFileName _id jobId')
+        .sort({ appliedAt: -1 });
+      const payments = await Payment.find({ userId: user._id, status: 'success' })
+        .select('amount paidAt invoiceNo transactionId')
+        .sort({ paidAt: -1 });
+      return {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        skills: user.skills,
+        experience: user.experience,
+        profileComplete: user.profileComplete,
+        isPremium: user.isPremium,
+        premiumExpiresAt: user.premiumExpiresAt,
+        createdAt: user.createdAt,
+        applications: apps,
+        payments
+      };
+    }));
+    res.json(report);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+// GET /api/admin/cv-applications
+const getCVApplications = async (req, res) => {
+  try {
+    const jobs = await Job.find().sort({ createdAt: -1 });
+    const report = await Promise.all(jobs.map(async (job) => {
+      const apps = await Application.find({ jobId: job._id })
+        .select('applicantName applicantEmail matchScore skills status cvFileName appliedAt _id userId')
+        .sort({ matchScore: -1 });
+      return {
+        jobId: job._id,
+        title: job.title,
+        company: job.company,
+        isPremium: job.isPremium,
+        isActive: job.isActive,
+        totalApplications: apps.length,
+        applications: apps
+      };
+    }));
+    res.json(report.filter(j => j.totalApplications > 0));
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -190,4 +241,4 @@ const toggleJobStatus = async (req, res) => {
     });
   }
 };
-module.exports = { getUsers, getStats, getJobReport, getUserReport, getMonthlyApplications, getApplicationsByDate, getJobApplicants, postJob, toggleJobStatus, getRevenueReport };
+module.exports = { getUsers, getStats, getJobReport, getUserReport, getMonthlyApplications, getApplicationsByDate, getJobApplicants, postJob, toggleJobStatus, getRevenueReport, getPremiumUsers, getCVApplications };

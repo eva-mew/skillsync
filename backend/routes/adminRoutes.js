@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getUsers, getStats, getJobReport, getUserReport,
-  getMonthlyApplications, getApplicationsByDate, getJobApplicants, postJob, toggleJobStatus,  getRevenueReport
+  getMonthlyApplications, getApplicationsByDate, getJobApplicants, postJob, toggleJobStatus,  getRevenueReport, getPremiumUsers, getCVApplications
 } = require('../controllers/adminController');
 
 const { protect, adminOnly } = require('../middleware/authMiddleware');
@@ -13,6 +13,8 @@ router.get('/job-report',              protect, adminOnly, getJobReport);
 router.get('/user-report',             protect, adminOnly, getUserReport);
 router.get('/monthly-applications',    protect, adminOnly, getMonthlyApplications);
 router.get('/revenue', protect, adminOnly, getRevenueReport);
+router.get('/premium-users', protect, adminOnly, getPremiumUsers);
+router.get('/cv-applications', protect, adminOnly, getCVApplications);
 router.get('/applications-by-date',    protect, adminOnly, getApplicationsByDate);
 router.get('/job/:jobId/applicants',   protect, adminOnly, getJobApplicants);
 router.post('/jobs',                   protect, adminOnly, postJob);

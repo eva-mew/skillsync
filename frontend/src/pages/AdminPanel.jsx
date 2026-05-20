@@ -20,7 +20,11 @@ const AdminPanel = () => {
   const [userReport, setUserReport] = useState([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
- 
+ const [revenueData, setRevenueData] = useState({ monthly: [], totalRevenue: 0, totalSubscribers: 0 });
+const [premiumUsers, setPremiumUsers] = useState([]);
+const [cvApplications, setCvApplications] = useState([]);
+const [selectedCVJob, setSelectedCVJob] = useState(null);
+const [expandedPremiumUser, setExpandedPremiumUser] = useState(null);
 
   // Forms
   const [showJobForm, setShowJobForm] = useState(false);
@@ -103,6 +107,21 @@ const [dateSearched, setDateSearched] = useState(false);
   } catch (err) {
     console.error('Monthly error:', err.response?.data || err.message);
   }
+
+  try {
+  const revenueR = await API.get('/admin/revenue');
+  setRevenueData(revenueR.data);
+} catch (err) { console.error('Revenue error:', err.message); }
+
+try {
+  const premiumR = await API.get('/admin/premium-users');
+  setPremiumUsers(premiumR.data);
+} catch (err) { console.error('Premium users error:', err.message); }
+
+try {
+  const cvR = await API.get('/admin/cv-applications');
+  setCvApplications(cvR.data);
+} catch (err) { console.error('CV applications error:', err.message); }
 
   setLoading(false);
 };
@@ -1377,6 +1396,397 @@ const [dateSearched, setDateSearched] = useState(false);
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+)}
+{/* ══ Cv APplication tab ══ */}
+{activeTab === 'cv-applications' && (
+  <div>
+    <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '20px' }}>
+      📄 CV Applications — Per Job
+    </h2>
+    {cvApplications.length === 0 ? (
+      <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+        No applications yet
+      </div>
+    ) : cvApplications.map((jobData) => (
+      <div key={jobData.jobId} className="card" style={{ marginBottom: '16px', overflow: 'hidden' }}>
+        {/* Job Header */}
+        <div
+          onClick={() => setSelectedCVJob(selectedCVJob === jobData.jobId ? null : jobData.jobId)}
+          style={{
+            padding: '16px 20px', display: 'flex', justifyContent: 'space-between',
+            alignItems: 'center', cursor: 'pointer',
+            background: selectedCVJob === jobData.jobId ? 'var(--accent-light)' : 'var(--surface)',
+            borderBottom: selectedCVJob === jobData.jobId ? '1px solid var(--accent-border)' : 'none'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '36px', height: '36px', borderRadius: '8px',
+              background: 'var(--accent)', color: 'white',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: '700', fontSize: '16px'
+            }}>
+              {jobData.company?.charAt(0)}
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {jobData.title}
+                {jobData.isPremium && <span style={{ marginLeft: '8px', fontSize: '11px', background: '#fef3c7', color: '#d97706', padding: '2px 8px', borderRadius: '100px', fontWeight: '700' }}>👑 Premium</span>}
+                {!jobData.isActive && <span style={{ marginLeft: '8px', fontSize: '11px', background: '#fee2e2', color: '#dc2626', padding: '2px 8px', borderRadius: '100px' }}>🔒 Closed</span>}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{jobData.company}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{
+              padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '700',
+              background: jobData.totalApplications > 0 ? 'var(--accent-light)' : 'var(--bg-secondary)',
+              color: jobData.totalApplications > 0 ? 'var(--accent)' : 'var(--text-muted)'
+            }}>
+              {jobData.totalApplications} CV{jobData.totalApplications !== 1 ? 's' : ''}
+            </span>
+            <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+              {selectedCVJob === jobData.jobId ? '▲' : '▼'}
+            </span>
+          </div>
+        </div>
+
+        {/* Applicants List */}
+        {selectedCVJob === jobData.jobId && (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+                  {['#', 'Applicant', 'Email', 'Match Score', 'Skills', 'CV', 'Status', 'Action'].map(h => (
+                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {jobData.applications.map((app, i) => (
+                  <tr key={app._id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                    <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>{i + 1}</td>
+                    <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{app.applicantName}</td>
+                    <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{app.applicantEmail}</td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{
+                        padding: '3px 10px', borderRadius: '100px', fontSize: '12px', fontWeight: '700',
+                        background: (app.matchScore || 0) >= 70 ? 'var(--green-light)' : (app.matchScore || 0) >= 40 ? 'var(--orange-light)' : '#fef2f2',
+                        color: (app.matchScore || 0) >= 70 ? 'var(--green)' : (app.matchScore || 0) >= 40 ? 'var(--orange)' : '#dc2626'
+                      }}>
+                        {app.matchScore || 0}%
+                      </span>
+                    </td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', maxWidth: '140px' }}>
+                        {(app.skills || []).slice(0, 2).map((s, j) => (
+                          <span key={j} className="skill-tag" style={{ fontSize: '10px', padding: '1px 6px' }}>{s}</span>
+                        ))}
+                        {(app.skills || []).length > 2 && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>+{app.skills.length - 2}</span>}
+                      </div>
+                    </td>
+                    <td style={{ padding: '10px 14px' }}>
+                      {app.cvFileName ? (
+                        <button onClick={async () => {
+                          try {
+                            const res = await API.get(`/applications/cv/${app._id}`, { responseType: 'blob' });
+                            const blob = new Blob([res.data], { type: res.headers['content-type'] });
+                            window.open(URL.createObjectURL(blob), '_blank');
+                          } catch (err) { alert('CV not found'); }
+                        }} style={{ padding: '5px 10px', background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid var(--accent-border)', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                          📄 View CV
+                        </button>
+                      ) : <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No CV</span>}
+                    </td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{
+                        padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: '600',
+                        background: app.status === 'selected' ? '#1a7a3a' : app.status === 'rejected' ? '#fee2e2' : app.status === 'viewed' ? 'var(--accent-light)' : 'var(--orange-light)',
+                        color: app.status === 'selected' ? 'white' : app.status === 'rejected' ? '#dc2626' : app.status === 'viewed' ? 'var(--accent)' : 'var(--orange)',
+                      }}>{app.status}</span>
+                    </td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <select value={app.status} onChange={async (e) => {
+                        try {
+                          await API.put(`/applications/${app._id}/status`, { status: e.target.value });
+                          setCvApplications(prev => prev.map(j =>
+                            j.jobId === jobData.jobId
+                              ? { ...j, applications: j.applications.map(a => a._id === app._id ? { ...a, status: e.target.value } : a) }
+                              : j
+                          ));
+                        } catch (err) { console.error(err); }
+                      }} style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        <option value="pending">Pending</option>
+                        <option value="viewed">Viewed</option>
+                        <option value="selected">Selected</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+)}
+{/* ══  Premium Users Tab══ */}
+{activeTab === 'premium-users' && (
+  <div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>👑 Premium Users</h2>
+      <span className="badge badge-blue">{premiumUsers.length} premium members</span>
+    </div>
+
+    {premiumUsers.length === 0 ? (
+      <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>No premium users yet</div>
+    ) : premiumUsers.map((u) => {
+      const isExpiringSoon = u.premiumExpiresAt && new Date(u.premiumExpiresAt) - new Date() < 3 * 24 * 60 * 60 * 1000;
+      const isExpanded = expandedPremiumUser === u._id;
+      return (
+        <div key={u._id} className="card" style={{ marginBottom: '14px', overflow: 'hidden' }}>
+          {/* User Header */}
+          <div
+            onClick={() => setExpandedPremiumUser(isExpanded ? null : u._id)}
+            style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: isExpanded ? 'var(--accent-light)' : 'var(--surface)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '16px' }}>
+                {u.name?.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {u.name}
+                  <span style={{ fontSize: '11px', background: '#fef3c7', color: '#d97706', padding: '2px 8px', borderRadius: '100px', fontWeight: '700' }}>👑 Premium</span>
+                  {isExpiringSoon && <span style={{ fontSize: '11px', background: '#fee2e2', color: '#dc2626', padding: '2px 8px', borderRadius: '100px' }}>⚠️ Expiring Soon</span>}
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{u.email}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Expires</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: isExpiringSoon ? '#dc2626' : 'var(--text-primary)' }}>
+                  {u.premiumExpiresAt ? new Date(u.premiumExpiresAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Applications</div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)' }}>{u.applications?.length || 0}</div>
+              </div>
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{isExpanded ? '▲' : '▼'}</span>
+            </div>
+          </div>
+
+          {/* Expanded Details */}
+          {isExpanded && (
+            <div style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
+
+              {/* User Info */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: '12px', marginBottom: '20px' }}>
+                {[
+                  { label: 'Experience', value: u.experience || '—' },
+                  { label: 'Profile %', value: `${u.profileComplete || 0}%` },
+                  { label: 'Skills', value: (u.skills || []).slice(0, 3).join(', ') || '—' },
+                  { label: 'Member Since', value: new Date(u.createdAt).toLocaleDateString() },
+                ].map((item, i) => (
+                  <div key={i} style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px', textTransform: 'uppercase' }}>{item.label}</div>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', textTransform: 'capitalize' }}>{item.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Payment History */}
+              {u.payments?.length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '10px' }}>💳 Payment History</div>
+                  {u.payments.map((pay, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: '8px', marginBottom: '6px', border: '1px solid var(--border)' }}>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Invoice: {pay.invoiceNo}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{new Date(pay.paidAt).toLocaleDateString()}</div>
+                      </div>
+                      <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--green)' }}>৳{pay.amount}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Applications */}
+              {u.applications?.length > 0 && (
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '10px' }}>📋 Applications</div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+                          {['Job', 'Company', 'Match', 'Status', 'CV', 'Action'].map(h => (
+                            <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {u.applications.map((app, i) => (
+                          <tr key={app._id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                            <td style={{ padding: '8px 12px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{app.jobTitle}</td>
+                            <td style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>{app.company}</td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <span style={{ fontSize: '12px', fontWeight: '700', color: (app.matchScore||0) >= 70 ? 'var(--green)' : 'var(--accent)' }}>
+                                {app.matchScore || 0}%
+                              </span>
+                            </td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <span style={{
+                                padding: '2px 8px', borderRadius: '100px', fontSize: '11px', fontWeight: '600',
+                                background: app.status === 'selected' ? '#1a7a3a' : app.status === 'rejected' ? '#fee2e2' : 'var(--orange-light)',
+                                color: app.status === 'selected' ? 'white' : app.status === 'rejected' ? '#dc2626' : 'var(--orange)',
+                              }}>{app.status}</span>
+                            </td>
+                            <td style={{ padding: '8px 12px' }}>
+                              {app.cvFileName ? (
+                                <button onClick={async () => {
+                                  try {
+                                    const res = await API.get(`/applications/cv/${app._id}`, { responseType: 'blob' });
+                                    window.open(URL.createObjectURL(new Blob([res.data], { type: res.headers['content-type'] })), '_blank');
+                                  } catch (err) { alert('CV not found'); }
+                                }} style={{ padding: '4px 8px', background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid var(--accent-border)', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                                  📄 View CV
+                                </button>
+                              ) : <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>No CV</span>}
+                            </td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <select value={app.status} onChange={async (e) => {
+                                try {
+                                  await API.put(`/applications/${app._id}/status`, { status: e.target.value });
+                                  setPremiumUsers(prev => prev.map(pu =>
+                                    pu._id === u._id
+                                      ? { ...pu, applications: pu.applications.map(a => a._id === app._id ? { ...a, status: e.target.value } : a) }
+                                      : pu
+                                  ));
+                                } catch (err) { console.error(err); }
+                              }} style={{ padding: '3px 6px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                <option value="pending">Pending</option>
+                                <option value="viewed">Viewed</option>
+                                <option value="selected">Selected</option>
+                                <option value="rejected">Rejected</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
+
+{/* ══  Revenue Tab ══ */}
+{activeTab === 'revenue' && (
+  <div>
+    <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '20px' }}>💰 Revenue & Subscriptions</h2>
+
+    {/* Summary Cards */}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px,1fr))', gap: '14px', marginBottom: '24px' }}>
+      {[
+        { icon: '💰', label: 'Total Revenue', value: `৳${revenueData.totalRevenue?.toLocaleString() || 0}`, color: '#16a34a' },
+        { icon: '👑', label: 'Total Subscribers', value: revenueData.totalSubscribers || 0, color: '#d97706' },
+        { icon: '📅', label: 'Active Premium', value: premiumUsers.length, color: '#3b82f6' },
+        { icon: '⚠️', label: 'Expiring (3 days)', value: premiumUsers.filter(u => u.premiumExpiresAt && new Date(u.premiumExpiresAt) - new Date() < 3 * 24 * 60 * 60 * 1000).length, color: '#dc2626' },
+      ].map((s, i) => (
+        <div key={i} className="card" style={{ padding: '20px', textAlign: 'center' }}>
+          <div style={{ fontSize: '28px', marginBottom: '8px' }}>{s.icon}</div>
+          <div style={{ fontSize: '22px', fontWeight: '800', color: s.color }}>{s.value}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{s.label}</div>
+        </div>
+      ))}
+    </div>
+
+    {/* Monthly Revenue Chart */}
+    <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>📊 Monthly Revenue</h3>
+        <button
+          onClick={() => downloadCSV(
+            revenueData.monthly, 'SkillSync_Revenue_Report',
+            ['Month', 'Revenue (৳)', 'Subscribers'],
+            d => [d.label, d.revenue, d.subscribers]
+          )}
+          className="btn-secondary"
+          style={{ fontSize: '12px', padding: '6px 14px' }}
+        >📥 Download CSV</button>
+      </div>
+
+      {revenueData.monthly.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No revenue data yet</div>
+      ) : (
+        <>
+          {/* Bar Chart */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', minHeight: '160px', padding: '0 4px', marginBottom: '16px' }}>
+            {revenueData.monthly.map((d, i) => {
+              const maxRev = Math.max(...revenueData.monthly.map(x => x.revenue), 1);
+              const barH = Math.max((d.revenue / maxRev) * 130, 8);
+              return (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flex: 1, minWidth: '60px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--green)' }}>৳{d.revenue}</span>
+                  <div style={{ width: '100%', height: `${barH}px`, background: 'linear-gradient(180deg, #16a34a, #15803d)', borderRadius: '6px 6px 0 0', transition: 'height 0.5s', position: 'relative' }}>
+                    <span style={{ position: 'absolute', top: '-18px', left: '50%', transform: 'translateX(-50%)', fontSize: '10px', color: 'var(--accent)', fontWeight: '700', whiteSpace: 'nowrap' }}>
+                      {d.subscribers} sub{d.subscribers !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', whiteSpace: 'nowrap' }}>{d.label}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Table */}
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+                  {['Month', 'Subscribers', 'Revenue'].map(h => (
+                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {revenueData.monthly.map((d, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                    <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{d.label}</td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fef3c7', color: '#b45309', fontSize: '12px', fontWeight: '700' }}>{d.subscribers}</span>
+                    </td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--green)' }}>৳{d.revenue.toLocaleString()}</span>
+                    </td>
+                  </tr>
+                ))}
+                {/* Total Row */}
+                <tr style={{ borderTop: '2px solid var(--border)', background: 'var(--accent-light)' }}>
+                  <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)' }}>Total</td>
+                  <td style={{ padding: '12px 14px' }}>
+                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fef3c7', color: '#b45309', fontSize: '12px', fontWeight: '700' }}>{revenueData.totalSubscribers}</span>
+                  </td>
+                  <td style={{ padding: '12px 14px' }}>
+                    <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--green)' }}>৳{revenueData.totalRevenue?.toLocaleString()}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   </div>
 )}
