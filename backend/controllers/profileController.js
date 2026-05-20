@@ -1,56 +1,69 @@
 const User = require('../models/User');
 
 const calculateStrength = (user) => {
+  const type = user.onboardingType || 'both';
   let score = 0;
 
-  // ── Skills — 40 points ──────────────────────────────────
-  // More skills = more points (diminishing returns after 10)
-  const skillCount = (user.skills || []).length;
-  if      (skillCount >= 10) score += 40;
-  else if (skillCount >= 7)  score += 34;
-  else if (skillCount >= 5)  score += 28;
-  else if (skillCount >= 3)  score += 20;
-  else if (skillCount >= 1)  score += 12;
-  // 0 skills = 0 points
+  if (type === 'job') {
+    // Job only — skills + experience + workPreference = 100
+    const skillCount = (user.skills || []).length;
+    if      (skillCount >= 10) score += 55;
+    else if (skillCount >= 7)  score += 45;
+    else if (skillCount >= 5)  score += 35;
+    else if (skillCount >= 3)  score += 25;
+    else if (skillCount >= 1)  score += 15;
 
-  // ── Experience — 20 points (4 levels) ───────────────────
-  const expPoints = {
-    'senior':  20,  // most complete profile indicator
-    'mid':     16,
-    'junior':  12,
-    'fresher': 8,   // still valid, lower weight
-    '':        0,
-  };
-  score += expPoints[user.experience || ''] || 0;
+    const expPoints = { senior: 25, mid: 20, junior: 15, fresher: 10, '': 0 };
+    score += expPoints[user.experience || ''] || 0;
 
-  // ── Work Preference — 15 points (4 options) ─────────────
-  const workPoints = {
-    'remote':  15,  // specific = clearer profile
-    'onsite':  15,
-    'hybrid':  12,
-    'any':     8,   // any = less defined preference
-    '':        0,
-  };
-  score += workPoints[user.workPreference || ''] || 0;
+    const workPoints = { remote: 15, onsite: 15, hybrid: 12, any: 8, '': 0 };
+    score += workPoints[user.workPreference || ''] || 0;
 
-  // ── Interests — 15 points ───────────────────────────────
-  const interestCount = (user.interests || []).length;
-  if      (interestCount >= 5) score += 15;
-  else if (interestCount >= 3) score += 11;
-  else if (interestCount >= 1) score += 6;
+    if (user.name && user.email) score += 5;
 
-  // ── Budget — 5 points ───────────────────────────────────
-  const budgetPoints = {
-    'high':   5,
-    'medium': 4,
-    'low':    3,
-    'zero':   2,
-    '':       0,
-  };
-  score += budgetPoints[user.budget || ''] || 0;
+  } else if (type === 'startup') {
+    // Startup only — interests + budget + skills = 100
+    const interestCount = (user.interests || []).length;
+    if      (interestCount >= 5) score += 40;
+    else if (interestCount >= 3) score += 28;
+    else if (interestCount >= 1) score += 15;
 
-  // ── Name + Email — 5 points (auto on registration) ──────
-  if (user.name && user.email) score += 5;
+    const budgetPoints = { high: 25, medium: 20, low: 15, zero: 10, '': 0 };
+    score += budgetPoints[user.budget || ''] || 0;
+
+    const skillCount = (user.skills || []).length;
+    if      (skillCount >= 5) score += 20;
+    else if (skillCount >= 3) score += 14;
+    else if (skillCount >= 1) score += 8;
+
+    if (user.name && user.email) score += 5;
+    if (user.experience && user.experience !== '') score += 10;
+
+  } else {
+    // Both — original logic
+    const skillCount = (user.skills || []).length;
+    if      (skillCount >= 10) score += 40;
+    else if (skillCount >= 7)  score += 34;
+    else if (skillCount >= 5)  score += 28;
+    else if (skillCount >= 3)  score += 20;
+    else if (skillCount >= 1)  score += 12;
+
+    const expPoints = { senior: 20, mid: 16, junior: 12, fresher: 8, '': 0 };
+    score += expPoints[user.experience || ''] || 0;
+
+    const workPoints = { remote: 15, onsite: 15, hybrid: 12, any: 8, '': 0 };
+    score += workPoints[user.workPreference || ''] || 0;
+
+    const interestCount = (user.interests || []).length;
+    if      (interestCount >= 5) score += 15;
+    else if (interestCount >= 3) score += 11;
+    else if (interestCount >= 1) score += 6;
+
+    const budgetPoints = { high: 5, medium: 4, low: 3, zero: 2, '': 0 };
+    score += budgetPoints[user.budget || ''] || 0;
+
+    if (user.name && user.email) score += 5;
+  }
 
   return Math.min(score, 100);
 };
@@ -85,6 +98,7 @@ const updateProfile = async (req, res) => {
     if (interests) user.interests = interests;
     if (budget) user.budget = budget;
     if (workPreference) user.workPreference = workPreference;
+    if (req.body.onboardingType) user.onboardingType = req.body.onboardingType;
 
     // Calculate profile strength
     user.profileComplete = calculateStrength(user);

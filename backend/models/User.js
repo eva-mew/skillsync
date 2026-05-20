@@ -37,6 +37,11 @@ const UserSchema = new mongoose.Schema({
     enum: ['remote', 'onsite', 'hybrid', 'any'],
     default: 'any'
   },
+  onboardingType: {
+  type: String,
+  enum: ['job', 'startup', 'both'],
+  default: 'both'
+},
   profileComplete: {
     type: Number,
     default: 0

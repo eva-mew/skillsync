@@ -40,3 +40,21 @@ exports.sendJobPostedConfirmation = async (adminEmail, jobTitle, company) => {
     );
   } catch (err) { console.error('Email error:', err.response?.data || err.message); }
 };
+exports.sendPremiumExpiryReminder = async (userEmail, userName, expiresAt) => {
+  try {
+    await sendEmail(
+      userEmail,
+      '⚠️ Your SkillSync Premium expires tomorrow!',
+      `<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
+        <h2 style="color:#d97706">⚠️ Premium Expiring Soon</h2>
+        <p>Hi <strong>${userName}</strong>,</p>
+        <p>Your SkillSync Premium subscription expires on <strong>${new Date(expiresAt).toLocaleDateString()}</strong>.</p>
+        <p>Renew now to keep access to exclusive jobs, priority applications and all premium features.</p>
+        <a href="${process.env.FRONTEND_URL}/premium" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#d97706;color:white;border-radius:8px;text-decoration:none">
+          👑 Renew Premium →
+        </a>
+      </div>`
+    );
+    console.log('✅ Expiry reminder sent to:', userEmail);
+  } catch (err) { console.error('Expiry email error:', err.message); }
+};

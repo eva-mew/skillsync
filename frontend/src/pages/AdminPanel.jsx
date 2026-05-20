@@ -251,6 +251,9 @@ const [dateSearched, setDateSearched] = useState(false);
     { key: 'reports', label: '📈 Reports' },
     { key: 'messages', label: `💬 Messages ${messages.filter(m => m.status === 'unread').length > 0 ? `(${messages.filter(m => m.status === 'unread').length})` : ''}` },
     { key: 'newsletters', label: '📨 Newsletter' },
+    { key: 'cv-applications', label: '📄 CV Applications' },
+{ key: 'premium-users',   label: '👑 Premium Users' },
+{ key: 'revenue',         label: '💰 Revenue' },
   ];
 
   const filteredJobs = jobs.filter(j =>

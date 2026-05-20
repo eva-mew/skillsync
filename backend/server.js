@@ -11,7 +11,9 @@ const savedRoutes = require('./routes/savedRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
-
+const cron = require('node-cron');
+const User = require('./models/User');
+const { sendPremiumExpiryReminder } = require('./utils/emailService');
 
 const app = express();  // ← must come before any app.use()
 const contactRoutes = require('./routes/contactRoutes');
@@ -43,7 +45,49 @@ app.use('/api/contact', contactRoutes);
 app.get('/', (req, res) => {
   res.json({ message: 'SkillSync API is running!', status: 'success' });
 });
+// Run every day at 9 AM
+cron.schedule('0 9 * * *', async () => {
+  try {
 
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const startOfTomorrow = new Date(
+      tomorrow.setHours(0, 0, 0, 0)
+    );
+
+    const endOfTomorrow = new Date(
+      tomorrow.setHours(23, 59, 59, 999)
+    );
+
+    const expiringUsers = await User.find({
+      isPremium: true,
+      premiumExpiresAt: {
+        $gte: startOfTomorrow,
+        $lte: endOfTomorrow
+      }
+    });
+
+    for (const user of expiringUsers) {
+
+      await sendPremiumExpiryReminder(
+        user.email,
+        user.name,
+        user.premiumExpiresAt
+      );
+
+    }
+
+    console.log(
+      `✅ Expiry reminders sent to ${expiringUsers.length} users`
+    );
+
+  } catch (err) {
+
+    console.error('Cron error:', err.message);
+
+  }
+});
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);

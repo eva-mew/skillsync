@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Job = require('../models/Job');
 const Startup = require('../models/Startup');
 const Application = require('../models/Application');
+const Payment = require('../models/Payment');
 const { sendJobPostedConfirmation } = require('../utils/emailService');
 // GET /api/admin/users
 const getUsers = async (req, res) => {
@@ -141,6 +142,27 @@ const postJob = async (req, res) => {
     });
   }
 };
+const getRevenueReport = async (req, res) => {
+  try {
+    const data = await Payment.aggregate([
+      { $match: { status: 'success' } },
+      {
+        $group: {
+          _id: { month: { $month: '$paidAt' }, year: { $year: '$paidAt' } },
+          totalRevenue: { $sum: '$amount' },
+          totalSubscribers: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    res.json(data.map(d => ({
+      label: `${months[d._id.month - 1]} ${d._id.year}`,
+      revenue: d.totalRevenue,
+      subscribers: d.totalSubscribers
+    })));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
 
 // PATCH /api/admin/jobs/:id/toggle
 const toggleJobStatus = async (req, res) => {
@@ -168,4 +190,4 @@ const toggleJobStatus = async (req, res) => {
     });
   }
 };
-module.exports = { getUsers, getStats, getJobReport, getUserReport, getMonthlyApplications, getApplicationsByDate, getJobApplicants, postJob, toggleJobStatus };
+module.exports = { getUsers, getStats, getJobReport, getUserReport, getMonthlyApplications, getApplicationsByDate, getJobApplicants, postJob, toggleJobStatus, getRevenueReport };

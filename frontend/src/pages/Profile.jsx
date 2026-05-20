@@ -23,12 +23,13 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState({
-    skills: [],
-    experience: 'fresher',
-    interests: [],
-    budget: 'zero',
-    workPreference: 'remote'
-  });
+  onboardingType: 'both',
+  skills: [],
+  experience: 'fresher',
+  interests: [],
+  budget: 'zero',
+  workPreference: 'remote'
+});
 
   useEffect(() => {
     fetchProfile();
@@ -43,7 +44,8 @@ const Profile = () => {
         experience: res.data.experience || 'fresher',
         interests: res.data.interests || [],
         budget: res.data.budget || 'zero',
-        workPreference: res.data.workPreference || 'remote'
+        workPreference: res.data.workPreference || 'remote',
+        onboardingType: res.data.onboardingType || 'both'
       });
     } catch (err) {
       console.error(err);
@@ -124,6 +126,15 @@ const Profile = () => {
             <span className={`badge ${user?.role === 'admin' ? 'badge-orange' : 'badge-blue'}`}>
               {user?.role}
             </span>
+            <div style={{ marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+  <span className="badge badge-green">
+    {form.onboardingType === 'job'
+      ? '💼 Job Seeker'
+      : form.onboardingType === 'startup'
+      ? '💡 Startup Builder'
+      : '🚀 Both'}
+  </span>
+</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '32px', fontWeight: '800', color: profile?.profileComplete >= 80 ? 'var(--green)' : 'var(--accent)' }}>
