@@ -21,43 +21,59 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const publicLinks = [
-    { label: 'Home', path: '/' },
-    { label: 'About', path: '/about' },
-    { label: 'Contact', path: '/contact' },
+    { label: 'Home',        path: '/' },
+    { label: 'About',       path: '/about' },
+    { label: 'Contact',     path: '/contact' },
     { label: 'Explore Jobs', path: '/jobs' },
   ];
 
-  // 🔥 UPDATED LOGIC ONLY HERE
-  const userLinks =
-    user?.role === 'admin'
-      ? [
-          { label: '🛡️ Admin Panel', path: '/admin' },
-        ]
-      : [
-          ...(user?.onboardingType === 'both'
-            ? [
-                { label: 'Jobs', path: '/jobs' },
-                { label: 'Startups', path: '/startups' },
-                { label: 'Dashboard', path: '/dashboard' },
-              ]
-            : user?.onboardingType === 'job'
-            ? [
-                { label: 'Jobs', path: '/jobs' },
-                { label: 'Dashboard', path: '/dashboard' },
-              ]
-            : user?.onboardingType === 'startup'
-            ? [
-                { label: 'Startups', path: '/startups' },
-                { label: 'Dashboard', path: '/dashboard' },
-              ]
-            : [
-                { label: 'Jobs', path: '/jobs' },
-                { label: 'Startups', path: '/startups' },
-                { label: 'Dashboard', path: '/dashboard' },
-              ]),
-        ];
+  const getNavLinks = () => {
+    if (!user) return publicLinks;
+    if (user.role === 'admin') return [{ label: '🛡️ Admin Panel', path: '/admin' }];
 
-  const navLinks = user ? userLinks : publicLinks;
+    const type = user.onboardingType;
+    if (type === 'job') {
+      return [
+        { label: 'Jobs',      path: '/jobs' },
+        { label: 'Dashboard', path: '/dashboard' },
+      ];
+    }
+    if (type === 'startup') {
+      return [
+        { label: 'Startups',  path: '/startups' },
+        { label: 'Dashboard', path: '/dashboard' },
+      ];
+    }
+    // both or undefined
+    return [
+      { label: 'Jobs',      path: '/jobs' },
+      { label: 'Startups',  path: '/startups' },
+      { label: 'Dashboard', path: '/dashboard' },
+    ];
+  };
+
+  const getDropdownLinks = () => {
+    if (user?.role === 'admin') {
+      return [{ icon: '🛡️', label: 'Admin Panel', path: '/admin' }];
+    }
+
+    const type = user?.onboardingType;
+    const base = [
+      { icon: '📊', label: 'Dashboard',  path: '/dashboard' },
+      { icon: '👤', label: 'My Profile', path: '/profile' },
+      { icon: '👑', label: 'Go Premium', path: '/premium' },
+    ];
+
+    // My Applications only relevant for job seekers
+    if (type === 'job' || type === 'both') {
+      base.splice(1, 0, { icon: '📋', label: 'My Applications', path: '/applications' });
+    }
+
+    return base;
+  };
+
+  const navLinks = getNavLinks();
+  const dropdownLinks = getDropdownLinks();
 
   return (
     <>
@@ -89,7 +105,7 @@ const Navbar = () => {
           </div>
 
           {/* Center Nav Links */}
-          <div style={{ display: 'flex', gap: '4px' }}>
+          <div style={{ display: 'flex', gap: '4px' }} className="navbar-links">
             {navLinks.map(link => (
               <button
                 key={link.path}
@@ -159,36 +175,56 @@ const Navbar = () => {
 
                   {menuOpen && (
                     <>
-                      <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setMenuOpen(false)} />
+                      <div
+                        style={{ position: 'fixed', inset: 0, zIndex: 99 }}
+                        onClick={() => setMenuOpen(false)}
+                      />
                       <div style={{
                         position: 'absolute', top: '46px', right: '0',
                         background: 'var(--surface)', border: '1px solid var(--border)',
                         borderRadius: '14px', padding: '8px', minWidth: '200px',
                         boxShadow: 'var(--shadow-lg)', zIndex: 100
                       }}>
-                        <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', marginBottom: '6px' }}>
-                          <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)' }}>{user.name}</div>
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{user.email}</div>
-                          <span style={{
-                            display: 'inline-block', marginTop: '6px', padding: '2px 8px',
-                            borderRadius: '4px', fontSize: '11px', fontWeight: '600',
-                            background: user.role === 'admin' ? 'var(--orange-light)' : 'var(--accent-light)',
-                            color: user.role === 'admin' ? 'var(--orange)' : 'var(--accent)'
-                          }}>
-                            {user.role}
-                          </span>
+                        {/* User info */}
+                        <div style={{
+                          padding: '10px 12px',
+                          borderBottom: '1px solid var(--border)',
+                          marginBottom: '6px'
+                        }}>
+                          <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)' }}>
+                            {user.name}
+                          </div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            {user.email}
+                          </div>
+                          <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                            <span style={{
+                              padding: '2px 8px', borderRadius: '4px',
+                              fontSize: '11px', fontWeight: '600',
+                              background: user.role === 'admin' ? 'var(--orange-light)' : 'var(--accent-light)',
+                              color: user.role === 'admin' ? 'var(--orange)' : 'var(--accent)'
+                            }}>
+                              {user.role}
+                            </span>
+                            {user.onboardingType && user.role !== 'admin' && (
+                              <span style={{
+                                padding: '2px 8px', borderRadius: '4px',
+                                fontSize: '11px', fontWeight: '600',
+                                background: 'var(--bg-secondary)',
+                                color: 'var(--text-muted)'
+                              }}>
+                                {user.onboardingType === 'job' ? '💼 Job Seeker'
+                                  : user.onboardingType === 'startup' ? '💡 Startup'
+                                  : '🚀 Both'}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
-                        {(user.role === 'admin'
-                          ? [{ icon: '🛡️', label: 'Admin Panel', path: '/admin' }]
-                          : [
-                              { icon: '📊', label: 'Dashboard', path: '/dashboard' },
-                              { icon: '📋', label: 'My Applications', path: '/applications' },
-                              { icon: '👤', label: 'My Profile', path: '/profile' },
-                              { icon: '👑', label: 'Go Premium', path: '/premium' },
-                            ]
-                        ).map(item => (
-                          <button key={item.label}
+                        {/* Dropdown links */}
+                        {dropdownLinks.map(item => (
+                          <button
+                            key={item.label}
                             onClick={() => { navigate(item.path); setMenuOpen(false); }}
                             style={{
                               display: 'flex', alignItems: 'center', gap: '10px',
@@ -262,6 +298,7 @@ const Navbar = () => {
           background: 'var(--surface)', borderBottom: '1px solid var(--border)',
           padding: '12px 16px', position: 'sticky', top: '64px', zIndex: 99
         }}>
+          {/* User info */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: '12px',
             padding: '12px', background: 'var(--bg-secondary)',
@@ -276,11 +313,19 @@ const Navbar = () => {
               {user.name?.charAt(0).toUpperCase()}
             </div>
             <div>
-              <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)' }}>{user.name}</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{user.email}</div>
+              <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)' }}>
+                {user.name}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                {user.onboardingType === 'job' ? '💼 Job Seeker'
+                  : user.onboardingType === 'startup' ? '💡 Startup Builder'
+                  : user.onboardingType === 'both' ? '🚀 Job & Startup'
+                  : user.email}
+              </div>
             </div>
           </div>
 
+          {/* Nav links */}
           {navLinks.map(link => (
             <button
               key={link.path}
@@ -296,6 +341,26 @@ const Navbar = () => {
               }}
             >
               {link.label}
+            </button>
+          ))}
+
+          <div style={{ height: '1px', background: 'var(--border)', margin: '8px 0' }} />
+
+          {/* Dropdown links in mobile too */}
+          {dropdownLinks.map(item => (
+            <button
+              key={item.label}
+              onClick={() => { navigate(item.path); setMobileMenuOpen(false); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+                padding: '12px 14px', borderRadius: '10px', border: 'none',
+                background: 'transparent', color: 'var(--text-secondary)',
+                fontWeight: '500', fontSize: '14px', cursor: 'pointer',
+                fontFamily: 'Plus Jakarta Sans, sans-serif', textAlign: 'left',
+                marginBottom: '4px'
+              }}
+            >
+              {item.icon} {item.label}
             </button>
           ))}
 

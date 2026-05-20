@@ -1813,104 +1813,184 @@ try {
 )}
 
 {/* ══  Revenue Tab ══ */}
-{activeTab === 'revenue' && (
-  <div>
-    <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '20px' }}>💰 Revenue & Subscriptions</h2>
+{activeTab === 'revenue' && (() => {
 
-    {/* Summary Cards */}
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px,1fr))', gap: '14px', marginBottom: '24px' }}>
-      {[
-        { icon: '💰', label: 'Total Revenue', value: `৳${revenueData.totalRevenue?.toLocaleString() || 0}`, color: '#16a34a' },
-        { icon: '👑', label: 'Total Subscribers', value: revenueData.totalSubscribers || 0, color: '#d97706' },
-        { icon: '📅', label: 'Active Premium', value: premiumUsers.length, color: '#3b82f6' },
-        { icon: '⚠️', label: 'Expiring (3 days)', value: premiumUsers.filter(u => u.premiumExpiresAt && new Date(u.premiumExpiresAt) - new Date() < 3 * 24 * 60 * 60 * 1000).length, color: '#dc2626' },
-      ].map((s, i) => (
-        <div key={i} className="card" style={{ padding: '20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '28px', marginBottom: '8px' }}>{s.icon}</div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: s.color }}>{s.value}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{s.label}</div>
-        </div>
-      ))}
-    </div>
+  // Build full Jan→current-month array with 0 for missing months
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now = new Date();
+  const currentYear  = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0-indexed
 
-    {/* Monthly Revenue Chart */}
-    <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>📊 Monthly Revenue</h3>
-        <button
-          onClick={() => downloadCSV(
-            revenueData.monthly, 'SkillSync_Revenue_Report',
-            ['Month', 'Revenue (৳)', 'Subscribers'],
-            d => [d.label, d.revenue, d.subscribers]
-          )}
-          className="btn-secondary"
-          style={{ fontSize: '12px', padding: '6px 14px' }}
-        >📥 Download CSV</button>
+  const fullMonthlyData = Array.from({ length: currentMonth + 1 }, (_, i) => {
+    const label = `${MONTH_NAMES[i]} ${currentYear}`;
+    const found = revenueData.monthly.find(d => d.label === label);
+    return {
+      label:       MONTH_NAMES[i],      // short label for x-axis
+      fullLabel:   label,
+      revenue:     found?.revenue     || 0,
+      subscribers: found?.subscribers || 0,
+    };
+  });
+
+  const maxRev = Math.max(...fullMonthlyData.map(d => d.revenue), 1);
+
+  return (
+    <div>
+      <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '20px' }}>
+        💰 Revenue & Subscriptions
+      </h2>
+
+      {/* Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px,1fr))', gap: '14px', marginBottom: '24px' }}>
+        {[
+          { icon: '💰', label: 'Total Revenue',      value: `৳${revenueData.totalRevenue?.toLocaleString() || 0}`, color: '#16a34a' },
+          { icon: '👑', label: 'Total Subscribers',  value: revenueData.totalSubscribers || 0,                      color: '#d97706' },
+          { icon: '📅', label: 'Active Premium',      value: premiumUsers.length,                                    color: '#3b82f6' },
+          { icon: '⚠️', label: 'Expiring (3 days)',   value: premiumUsers.filter(u => u.premiumExpiresAt && new Date(u.premiumExpiresAt) - new Date() < 3 * 24 * 60 * 60 * 1000).length, color: '#dc2626' },
+        ].map((s, i) => (
+          <div key={i} className="card" style={{ padding: '20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '28px', marginBottom: '8px' }}>{s.icon}</div>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{s.label}</div>
+          </div>
+        ))}
       </div>
 
-      {revenueData.monthly.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No revenue data yet</div>
-      ) : (
-        <>
-          {/* Bar Chart */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', minHeight: '160px', padding: '0 4px', marginBottom: '16px' }}>
-            {revenueData.monthly.map((d, i) => {
-              const maxRev = Math.max(...revenueData.monthly.map(x => x.revenue), 1);
-              const barH = Math.max((d.revenue / maxRev) * 130, 8);
+      {/* Monthly Revenue Chart */}
+      <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>📊 Monthly Revenue</h3>
+          <button
+            onClick={() => downloadCSV(
+              fullMonthlyData, 'SkillSync_Revenue_Report',
+              ['Month', 'Revenue (৳)', 'Subscribers'],
+              d => [d.fullLabel, d.revenue, d.subscribers]
+            )}
+            className="btn-secondary"
+            style={{ fontSize: '12px', padding: '6px 14px' }}
+          >
+            📥 Download CSV
+          </button>
+        </div>
+
+        {/* Bar Chart */}
+        <div style={{ overflowX: 'auto' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: '8px',
+            minHeight: '200px',
+            paddingBottom: '8px',
+            minWidth: `${fullMonthlyData.length * 56}px`
+          }}>
+            {fullMonthlyData.map((d, i) => {
+              const barH = d.revenue > 0 ? Math.max((d.revenue / maxRev) * 160, 20) : 0;
+              const isCurrentMonth = i === currentMonth;
               return (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flex: 1, minWidth: '60px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--green)' }}>৳{d.revenue}</span>
-                  <div style={{ width: '100%', height: `${barH}px`, background: 'linear-gradient(180deg, #16a34a, #15803d)', borderRadius: '6px 6px 0 0', transition: 'height 0.5s', position: 'relative' }}>
-                    <span style={{ position: 'absolute', top: '-18px', left: '50%', transform: 'translateX(-50%)', fontSize: '10px', color: 'var(--accent)', fontWeight: '700', whiteSpace: 'nowrap' }}>
-                      {d.subscribers} sub{d.subscribers !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', whiteSpace: 'nowrap' }}>{d.label}</span>
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', gap: '4px',
+                    flex: 1, minWidth: '48px'
+                  }}
+                >
+                  {/* Revenue label on top of bar */}
+                  <span style={{
+                    fontSize: '10px', fontWeight: '700',
+                    color: d.revenue > 0 ? '#16a34a' : 'transparent',
+                    minHeight: '14px'
+                  }}>
+                    ৳{d.revenue.toLocaleString()}
+                  </span>
+
+                  {/* Bar */}
+                  <div style={{
+                    width: '100%',
+                    height: `${barH}px`,
+                    minHeight: d.revenue > 0 ? '20px' : '0px',
+                    background: isCurrentMonth
+                      ? 'linear-gradient(180deg, #3b82f6, #2563eb)'
+                      : d.revenue > 0
+                        ? 'linear-gradient(180deg, #4f8ef7, #3b82f6)'
+                        : 'transparent',
+                    borderRadius: '5px 5px 0 0',
+                    transition: 'height 0.5s ease',
+                    position: 'relative',
+                    cursor: d.revenue > 0 ? 'pointer' : 'default',
+                  }}
+                  title={d.revenue > 0 ? `${d.fullLabel}: ৳${d.revenue} — ${d.subscribers} subscriber(s)` : ''}
+                  />
+
+                  {/* Baseline */}
+                  <div style={{ width: '100%', height: '2px', background: 'var(--border)' }} />
+
+                  {/* Month label */}
+                  <span style={{
+                    fontSize: '11px',
+                    color: isCurrentMonth ? 'var(--accent)' : 'var(--text-muted)',
+                    fontWeight: isCurrentMonth ? '700' : '400',
+                    textAlign: 'center'
+                  }}>
+                    {d.label}
+                  </span>
                 </div>
               );
             })}
           </div>
+        </div>
 
-          {/* Table */}
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-                  {['Month', 'Subscribers', 'Revenue'].map(h => (
-                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {revenueData.monthly.map((d, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
-                    <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{d.label}</td>
-                    <td style={{ padding: '10px 14px' }}>
-                      <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fef3c7', color: '#b45309', fontSize: '12px', fontWeight: '700' }}>{d.subscribers}</span>
-                    </td>
-                    <td style={{ padding: '10px 14px' }}>
-                      <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--green)' }}>৳{d.revenue.toLocaleString()}</span>
-                    </td>
-                  </tr>
+        {/* Table */}
+        <div style={{ overflowX: 'auto', marginTop: '24px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+                {['Month', 'Subscribers', 'Revenue'].map(h => (
+                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    {h}
+                  </th>
                 ))}
-                {/* Total Row */}
-                <tr style={{ borderTop: '2px solid var(--border)', background: 'var(--accent-light)' }}>
-                  <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)' }}>Total</td>
-                  <td style={{ padding: '12px 14px' }}>
-                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fef3c7', color: '#b45309', fontSize: '12px', fontWeight: '700' }}>{revenueData.totalSubscribers}</span>
+              </tr>
+            </thead>
+            <tbody>
+              {fullMonthlyData.map((d, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                  <td style={{ padding: '10px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                    {d.fullLabel}
                   </td>
-                  <td style={{ padding: '12px 14px' }}>
-                    <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--green)' }}>৳{revenueData.totalRevenue?.toLocaleString()}</span>
+                  <td style={{ padding: '10px 14px' }}>
+                    <span style={{ padding: '2px 10px', borderRadius: '100px', background: d.subscribers > 0 ? '#fef3c7' : 'var(--bg-secondary)', color: d.subscribers > 0 ? '#b45309' : 'var(--text-muted)', fontSize: '12px', fontWeight: '700' }}>
+                      {d.subscribers}
+                    </span>
+                  </td>
+                  <td style={{ padding: '10px 14px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '800', color: d.revenue > 0 ? 'var(--green)' : 'var(--text-muted)' }}>
+                      {d.revenue > 0 ? `৳${d.revenue.toLocaleString()}` : '—'}
+                    </span>
                   </td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+              ))}
+              {/* Total Row */}
+              <tr style={{ borderTop: '2px solid var(--border)', background: 'var(--accent-light)' }}>
+                <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)' }}>Total</td>
+                <td style={{ padding: '12px 14px' }}>
+                  <span style={{ padding: '2px 10px', borderRadius: '100px', background: '#fef3c7', color: '#b45309', fontSize: '12px', fontWeight: '700' }}>
+                    {revenueData.totalSubscribers}
+                  </span>
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--green)' }}>
+                    ৳{revenueData.totalRevenue?.toLocaleString()}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
-)}
+  );
+})()}
 
         {/* ══ MESSAGES TAB ══ */}
         {activeTab === 'messages' && (

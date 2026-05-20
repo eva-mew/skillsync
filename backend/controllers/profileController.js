@@ -5,7 +5,7 @@ const calculateStrength = (user) => {
   let score = 0;
 
   if (type === 'job') {
-    // Job only — skills + experience + workPreference = 100
+    // Job only — skills (55) + experience (25) + workPreference (15) + name/email (5) = 100
     const skillCount = (user.skills || []).length;
     if      (skillCount >= 10) score += 55;
     else if (skillCount >= 7)  score += 45;
@@ -22,7 +22,7 @@ const calculateStrength = (user) => {
     if (user.name && user.email) score += 5;
 
   } else if (type === 'startup') {
-    // Startup only — interests + budget + skills = 100
+    // Startup only — interests (40) + budget (25) + skills (20) + name/email (5) + experience (10) = 100
     const interestCount = (user.interests || []).length;
     if      (interestCount >= 5) score += 40;
     else if (interestCount >= 3) score += 28;
@@ -40,7 +40,7 @@ const calculateStrength = (user) => {
     if (user.experience && user.experience !== '') score += 10;
 
   } else {
-    // Both — original logic
+    // Both — skills (40) + experience (20) + workPreference (15) + interests (15) + budget (5) + name/email (5) = 100
     const skillCount = (user.skills || []).length;
     if      (skillCount >= 10) score += 40;
     else if (skillCount >= 7)  score += 34;
@@ -67,14 +67,13 @@ const calculateStrength = (user) => {
 
   return Math.min(score, 100);
 };
+
 // @route  GET /api/profile
 // @access Private
 const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -85,34 +84,56 @@ const getProfile = async (req, res) => {
 // @access Private
 const updateProfile = async (req, res) => {
   try {
-    const { skills, experience, interests, budget, workPreference } = req.body;
+    const { skills, experience, interests, budget, workPreference, onboardingType } = req.body;
 
     const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Set onboardingType first so calculateStrength uses the correct formula
+    if (onboardingType) user.onboardingType = onboardingType;
+
+    const type = user.onboardingType || 'both';
+
+    // Update only the fields relevant to the user's onboardingType
+    if (type === 'job') {
+      if (skills)         user.skills         = skills;
+      if (experience)     user.experience     = experience;
+      if (workPreference) user.workPreference = workPreference;
+      // Clear startup-only fields so they don't pollute the score
+      user.interests = [];
+      user.budget    = 'zero';
+
+    } else if (type === 'startup') {
+      if (interests) user.interests = interests;
+      if (budget)    user.budget    = budget;
+      if (skills)    user.skills    = skills;   // skills optional but useful for matching
+      // Clear job-only fields
+      user.experience     = 'fresher';
+      user.workPreference = 'any';
+
+    } else {
+      // both — update everything
+      if (skills)         user.skills         = skills;
+      if (experience)     user.experience     = experience;
+      if (interests)      user.interests      = interests;
+      if (budget)         user.budget         = budget;
+      if (workPreference) user.workPreference = workPreference;
     }
 
-    // Update fields
-    if (skills) user.skills = skills;
-    if (experience) user.experience = experience;
-    if (interests) user.interests = interests;
-    if (budget) user.budget = budget;
-    if (workPreference) user.workPreference = workPreference;
-    if (req.body.onboardingType) user.onboardingType = req.body.onboardingType;
-
-    // Calculate profile strength
+    // Recalculate profile strength based on the correct type
     user.profileComplete = calculateStrength(user);
 
     const updatedUser = await user.save();
 
     res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      skills: updatedUser.skills,
-      experience: updatedUser.experience,
-      interests: updatedUser.interests,
-      budget: updatedUser.budget,
+      _id:            updatedUser._id,
+      name:           updatedUser.name,
+      email:          updatedUser.email,
+      onboardingType: updatedUser.onboardingType,
+      skills:         updatedUser.skills,
+      experience:     updatedUser.experience,
+      interests:      updatedUser.interests,
+      budget:         updatedUser.budget,
       workPreference: updatedUser.workPreference,
       profileComplete: updatedUser.profileComplete
     });
