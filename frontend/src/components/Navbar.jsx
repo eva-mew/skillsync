@@ -27,17 +27,35 @@ const Navbar = () => {
     { label: 'Explore Jobs', path: '/jobs' },
   ];
 
-const userLinks = user?.role === 'admin'
-  ? [
-      // Admin ONLY sees Admin Panel in navbar
-      { label: '🛡️ Admin Panel', path: '/admin' },
-    ]
-  : [
-      // Regular user sees these
-      { label: 'Jobs', path: '/jobs' },
-      { label: 'Startups', path: '/startups' },
-      { label: 'Dashboard', path: '/dashboard' },
-    ];
+  // 🔥 UPDATED LOGIC ONLY HERE
+  const userLinks =
+    user?.role === 'admin'
+      ? [
+          { label: '🛡️ Admin Panel', path: '/admin' },
+        ]
+      : [
+          ...(user?.onboardingType === 'both'
+            ? [
+                { label: 'Jobs', path: '/jobs' },
+                { label: 'Startups', path: '/startups' },
+                { label: 'Dashboard', path: '/dashboard' },
+              ]
+            : user?.onboardingType === 'job'
+            ? [
+                { label: 'Jobs', path: '/jobs' },
+                { label: 'Dashboard', path: '/dashboard' },
+              ]
+            : user?.onboardingType === 'startup'
+            ? [
+                { label: 'Startups', path: '/startups' },
+                { label: 'Dashboard', path: '/dashboard' },
+              ]
+            : [
+                { label: 'Jobs', path: '/jobs' },
+                { label: 'Startups', path: '/startups' },
+                { label: 'Dashboard', path: '/dashboard' },
+              ]),
+        ];
 
   const navLinks = user ? userLinks : publicLinks;
 
@@ -70,37 +88,37 @@ const userLinks = user?.role === 'admin'
             </span>
           </div>
 
-          {/* Center Nav Links — always visible */}
+          {/* Center Nav Links */}
           <div style={{ display: 'flex', gap: '4px' }}>
             {navLinks.map(link => (
-  <button
-    key={link.path}
-    onClick={() => navigate(link.path)}
-    onMouseEnter={e => {
-      if (!isActive(link.path)) {
-        e.target.style.background = 'var(--accent-light)';
-        e.target.style.color = 'var(--accent)';
-      }
-    }}
-    onMouseLeave={e => {
-      if (!isActive(link.path)) {
-        e.target.style.background = 'transparent';
-        e.target.style.color = 'var(--text-secondary)';
-      }
-    }}
-    style={{
-      padding: '8px 16px', borderRadius: '8px', border: 'none',
-      background: isActive(link.path) ? 'var(--accent-light)' : 'transparent',
-      color: isActive(link.path) ? 'var(--accent)' : 'var(--text-secondary)',
-      fontWeight: isActive(link.path) ? '600' : '500',
-      fontSize: '14px', cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      fontFamily: 'Plus Jakarta Sans, sans-serif'
-    }}
-  >
-    {link.label}
-  </button>
-))}
+              <button
+                key={link.path}
+                onClick={() => navigate(link.path)}
+                onMouseEnter={e => {
+                  if (!isActive(link.path)) {
+                    e.target.style.background = 'var(--accent-light)';
+                    e.target.style.color = 'var(--accent)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive(link.path)) {
+                    e.target.style.background = 'transparent';
+                    e.target.style.color = 'var(--text-secondary)';
+                  }
+                }}
+                style={{
+                  padding: '8px 16px', borderRadius: '8px', border: 'none',
+                  background: isActive(link.path) ? 'var(--accent-light)' : 'transparent',
+                  color: isActive(link.path) ? 'var(--accent)' : 'var(--text-secondary)',
+                  fontWeight: isActive(link.path) ? '600' : '500',
+                  fontSize: '14px', cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'Plus Jakarta Sans, sans-serif'
+                }}
+              >
+                {link.label}
+              </button>
+            ))}
           </div>
 
           {/* Right Side */}
@@ -162,16 +180,14 @@ const userLinks = user?.role === 'admin'
                         </div>
 
                         {(user.role === 'admin'
-  ? [
-      { icon: '🛡️', label: 'Admin Panel', path: '/admin' },
-    ]
-  : [
-      { icon: '📊', label: 'Dashboard', path: '/dashboard' },
-      { icon: '📋', label: 'My Applications', path: '/applications' },
-      { icon: '👤', label: 'My Profile', path: '/profile' },
-      { icon: '👑', label: 'Go Premium', path: '/premium' },
-    ]
-).map(item => (
+                          ? [{ icon: '🛡️', label: 'Admin Panel', path: '/admin' }]
+                          : [
+                              { icon: '📊', label: 'Dashboard', path: '/dashboard' },
+                              { icon: '📋', label: 'My Applications', path: '/applications' },
+                              { icon: '👤', label: 'My Profile', path: '/profile' },
+                              { icon: '👑', label: 'Go Premium', path: '/premium' },
+                            ]
+                        ).map(item => (
                           <button key={item.label}
                             onClick={() => { navigate(item.path); setMenuOpen(false); }}
                             style={{
@@ -219,7 +235,7 @@ const userLinks = user?.role === 'admin'
                   {mobileMenuOpen ? '✕' : '☰'}
                 </button>
               </>
-           ) : (
+            ) : (
               <>
                 <button className="btn-ghost" onClick={() => navigate('/login')}>Sign In</button>
                 <button

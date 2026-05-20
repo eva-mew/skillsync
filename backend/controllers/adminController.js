@@ -157,11 +157,14 @@ const getRevenueReport = async (req, res) => {
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]);
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    res.json(data.map(d => ({
+    const monthly = data.map(d => ({
       label: `${months[d._id.month - 1]} ${d._id.year}`,
       revenue: d.totalRevenue,
       subscribers: d.totalSubscribers
-    })));
+    }));
+    const totalRevenue = monthly.reduce((sum, m) => sum + m.revenue, 0);
+    const totalSubscribers = monthly.reduce((sum, m) => sum + m.subscribers, 0);
+    res.json({ monthly, totalRevenue, totalSubscribers });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 // GET /api/admin/premium-users
