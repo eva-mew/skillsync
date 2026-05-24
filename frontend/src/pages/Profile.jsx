@@ -149,10 +149,12 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Skills */}
-        <div className="card" style={{ padding: '24px', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>
-            🧠 Technical Skills
+        
+        {/* Skills — job/both only */}
+{(form.onboardingType === 'job' || form.onboardingType === 'both') && (
+<div className="card" style={{ padding: '24px', marginBottom: '16px' }}>
+  <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>
+    🧠 Technical Skills
             <span style={{ fontSize: '13px', fontWeight: '400', color: 'var(--text-muted)', marginLeft: '8px' }}>
               ({form.skills.length} selected)
             </span>
@@ -176,11 +178,14 @@ const Profile = () => {
             ))}
           </div>
         </div>
+        )}
 
         {/* Experience */}
-        <div className="card" style={{ padding: '24px', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>
-            🎯 Experience Level
+       {/* Experience — job/both only */}
+{(form.onboardingType === 'job' || form.onboardingType === 'both') && (
+<div className="card" style={{ padding: '24px', marginBottom: '16px' }}>
+  <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>
+    🎯 Experience Level
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '10px' }}>
             {[
@@ -207,6 +212,7 @@ const Profile = () => {
             ))}
           </div>
         </div>
+        )}
 
         {/* Interests */}
        {/* Interests */}
@@ -250,9 +256,10 @@ const Profile = () => {
             ⚙️ Preferences
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <div>
-              <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '10px' }}>
-                Work Preference
+           {(form.onboardingType === 'job' || form.onboardingType === 'both') && (
+<div>
+  <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '10px' }}>
+    Work Preference
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 {[
@@ -278,6 +285,7 @@ const Profile = () => {
                 ))}
               </div>
             </div>
+            )}
             {form.onboardingType !== 'job' && (
   <div>
     <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '10px' }}>
