@@ -28,6 +28,7 @@ const Navbar = () => {
   ];
 
   const getNavLinks = () => {
+    if (location.pathname === '/onboarding') return [];
     if (!user) return publicLinks;
     if (user.role === 'admin') return [{ label: '🛡️ Admin Panel', path: '/admin' }];
 
@@ -109,6 +110,7 @@ const Navbar = () => {
           </div>
 
           {/* Center Nav Links */}
+          {location.pathname !== '/onboarding' && (
           <div style={{ display: 'flex', gap: '4px' }} className="navbar-links">
             {navLinks.map(link => (
               <button
@@ -140,6 +142,7 @@ const Navbar = () => {
               </button>
             ))}
           </div>
+          )}
 
           {/* Right Side */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -161,6 +164,7 @@ const Navbar = () => {
             </button>
 
             {user ? (
+              location.pathname === '/onboarding' ? null : (
               <>
                 {/* Avatar + Dropdown */}
                 <div style={{ position: 'relative' }} className="navbar-links">
@@ -274,7 +278,7 @@ const Navbar = () => {
                 >
                   {mobileMenuOpen ? '✕' : '☰'}
                 </button>
-              </>
+              </> )
             ) : (
               <>
                 <button className="btn-ghost" onClick={() => navigate('/login')}>Sign In</button>

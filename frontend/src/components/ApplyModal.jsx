@@ -39,9 +39,9 @@ const unmatched = jobSkills.filter(skill =>
   !normalizedUserSkills.includes(normalizeSkill(skill))
 );
 
-const matchPct = jobSkills.length > 0
+const matchPct = job.matchScore ?? (jobSkills.length > 0
   ? Math.round((matchedSkills.length / jobSkills.length) * 100)
-  : 0;
+  : 0);
 
 const canApply = matchedSkills.length > 0;
 

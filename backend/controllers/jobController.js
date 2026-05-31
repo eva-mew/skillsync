@@ -41,14 +41,14 @@ const getJobById = async (req, res) => {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: 'Job not found' });
 
-    // সব applicants match score অনুযায়ী sort করা
+    // all applicants match score sort 
     const applicants = await Application.find({ jobId: job._id })
       .select('userId matchScore')
       .sort({ matchScore: -1 });
 
     const applicationCount = applicants.length;
 
-    // logged in user এর rank বের করো
+    // logged in user rank 
     let userRank = null;
     if (req.user) {
       const idx = applicants.findIndex(
