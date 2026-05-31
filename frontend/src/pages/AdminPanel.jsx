@@ -728,7 +728,7 @@ try {
                 </thead>
                 <tbody>
                   {users.map((u, i) => {
-                    const appCount = applications.filter(a => String(a.userId) === String(u._id)).length;
+                    {u.appCount || 0}
                     return (
                       <tr key={u._id} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
                         <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>{i + 1}</td>
@@ -764,8 +764,8 @@ try {
                           </div>
                         </td>
                         <td style={{ padding: '10px 14px' }}>
-                          <span style={{ padding: '3px 10px', borderRadius: '100px', background: appCount > 0 ? 'var(--accent-light)' : 'var(--bg-secondary)', color: appCount > 0 ? 'var(--accent)' : 'var(--text-muted)', fontSize: '12px', fontWeight: '700' }}>
-                            {appCount}
+                          <span style={{ padding: '3px 10px', borderRadius: '100px', background: u.appCount > 0 ? 'var(--accent-light)' : 'var(--bg-secondary)', color: u.appCount > 0 ? 'var(--accent)' : 'var(--text-muted)', fontSize: '12px', fontWeight: '700' }}>
+                            {u.appCount || 0}
                           </span>
                         </td>
                         <td style={{ padding: '10px 14px', fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
@@ -1669,70 +1669,33 @@ try {
             ৳{pay.amount}
           </span>
 
-          <button
-            onClick={async () => {
-              try {
-                const res = await API.get(`/payment/invoice/${pay.transactionId}`);
-                const inv = res.data;
-
-                const w = window.open('', '_blank');
-                w.document.write(`
-                  <html>
-                    <head>
-                      <title>Invoice ${inv.invoiceNo}</title>
-                      <style>
-                        body{font-family:Arial;padding:40px;color:#333}
-                        .header{text-align:center;border-bottom:3px solid #1a7a3a;padding-bottom:20px;margin-bottom:30px}
-                        .logo{font-size:28px;font-weight:800;color:#1a7a3a}
-                        table{width:100%;border-collapse:collapse;margin:20px 0}
-                        th{background:#1a7a3a;color:white;padding:12px;text-align:left}
-                        td{padding:12px;border-bottom:1px solid #eee}
-                        .total{font-size:20px;font-weight:800;color:#1a7a3a;text-align:right;margin-top:20px}
-                        .footer{text-align:center;margin-top:40px;color:#888;font-size:12px;border-top:1px solid #eee;padding-top:20px}
-                      </style>
-                    </head>
-                    <body>
-                      <div class="header">
-                        <div class="logo">SkillSync</div>
-                        <div>Invoice: ${inv.invoiceNo}</div>
-                      </div>
-
-                      <table>
-                        <tr><th colspan="2">Customer</th></tr>
-                        <tr><td>Name</td><td>${inv.userName}</td></tr>
-                        <tr><td>Email</td><td>${inv.userEmail}</td></tr>
-
-                        <tr><th colspan="2">Payment</th></tr>
-                        <tr><td>Transaction ID</td><td>${inv.transactionId}</td></tr>
-                        <tr><td>Amount</td><td>৳${inv.amount} BDT</td></tr>
-                        <tr><td>Date</td><td>${new Date(inv.paidAt).toLocaleDateString()}</td></tr>
-                        <tr><td>Valid Until</td><td>${new Date(inv.expiresAt).toLocaleDateString()}</td></tr>
-                      </table>
-
-                      <div class="total">Total: ৳${inv.amount} BDT</div>
-                      <div class="footer">SkillSync Premium — Thank you!</div>
-                    </body>
-                  </html>
-                `);
-
-                w.document.close();
-                w.print();
-              } catch {
-                alert('Invoice not found');
-              }
-            }}
-            style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              border: '1px solid var(--border)',
-              background: 'var(--surface)',
-              color: 'var(--text-secondary)',
-              fontSize: '11px',
-              cursor: 'pointer'
-            }}
-          >
-            📥 Invoice
-          </button>
+         <button
+  onClick={async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `/api/payment/admin-invoice/${payment.transactionId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      if (!res.ok) {
+        alert('Invoice not found');
+        return;
+      }
+      const data = await res.json();
+      alert(
+        `Invoice No: ${data.invoiceNo}\nUser: ${data.userName}\nAmount: ৳${data.amount}\nDate: ${new Date(data.paidAt).toLocaleDateString()}`
+      );
+    } catch (err) {
+      alert('Invoice not found');
+    }
+  }}
+  className="btn-secondary"
+  style={{ fontSize: '11px', padding: '4px 10px' }}
+>
+  📄 Invoice
+</button>
         </div>
       </div>
     ))}

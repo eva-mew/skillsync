@@ -170,6 +170,9 @@ const getInvoice = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+
 // @route POST /api/payment/ipn
 const paymentIPN = async (req, res) => {
   try {
@@ -209,6 +212,20 @@ const paymentIPN = async (req, res) => {
 };
 
 
+const getAdminInvoice = async (req, res) => {
+  try {
+    const payment = await Payment.findOne({
+      transactionId: req.params.txn,
+      status: 'success'
+    });
+    if (!payment) return res.status(404).json({ message: 'Invoice not found' });
+    res.json(payment);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
 module.exports = {
   initiatePayment,
   paymentSuccess,
@@ -217,5 +234,6 @@ module.exports = {
   getMyPayments,
   getPremiumStatus,
   getInvoice,
+  getAdminInvoice,
   paymentIPN
 };

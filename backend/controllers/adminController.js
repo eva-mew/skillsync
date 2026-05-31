@@ -7,9 +7,24 @@ const { sendJobPostedConfirmation } = require('../utils/emailService');
 // GET /api/admin/users
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-password').sort({ createdAt: -1 });
-    res.json(users);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+    const users = await User.find()
+      .select('-password')
+      .sort({ createdAt: -1 });
+
+    const usersWithCount = await Promise.all(
+      users.map(async (user) => {
+        const appCount = await Application.countDocuments({ userId: user._id });
+        return {
+          ...user.toObject(),
+          appCount
+        };
+      })
+    );
+
+    res.json(usersWithCount);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // GET /api/admin/stats

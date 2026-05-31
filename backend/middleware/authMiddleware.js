@@ -36,7 +36,7 @@ const optionalProtect = async (req, res, next) => {
       req.user = await User.findById(decoded.id).select('-password');
     }
   } catch (err) {
-    // invalid token হলেও চলবে
+    // invalid token 
   }
   next();
 };

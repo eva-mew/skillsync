@@ -8,6 +8,7 @@ const {
   getMyPayments,
   getPremiumStatus,
   getInvoice,
+  getAdminInvoice,
   paymentIPN
 } = require('../controllers/paymentController');
 const { protect } = require('../middleware/authMiddleware');
@@ -19,6 +20,7 @@ router.post('/cancel', paymentCancel);
 router.get('/my', protect, getMyPayments);
 router.get('/status', protect, getPremiumStatus);
 router.get('/invoice/:txn', protect, getInvoice);
+router.get('/admin-invoice/:txn', protect, getAdminInvoice);
 router.post('/ipn', paymentIPN);
 
 
